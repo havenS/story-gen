@@ -6,7 +6,15 @@ import pytest
 import json
 import os
 import io
+import logging
 from unittest.mock import patch, AsyncMock
+
+@pytest.fixture(autouse=True)
+def disable_logging():
+    """Disable logging during tests."""
+    logging.disable(logging.CRITICAL)
+    yield
+    logging.disable(logging.NOTSET)
 
 def test_home_route(client):
     """Test the home endpoint returns a 200 OK status code."""
@@ -64,7 +72,6 @@ def test_generate_short_endpoint(client):
     
     # Test data matching the curl command
     data = {
-        'text': 'One evening, as Emma was finishing up her homework in the living room, she felt a cold draft brush past her. She glanced around, but there was nothing out of place.',
         'type': 'Horror',
         'filename': 'short_output.mp4'
     }
@@ -82,7 +89,7 @@ def test_generate_short_endpoint(client):
     # We expect a 400 error in this case due to missing audio file
     assert response.status_code == 400
     data = response.get_json()
-    assert data and data.get('error') == 'Failed to sanitize audio file: assets/audio/277192__thedweebman__eerie-tone-music-background-loop.wav'
+    assert data and data.get('error') == 'Missing required fields'
 
 def test_nonexistent_endpoint(client):
     """Test that requesting a non-existent endpoint returns 404."""

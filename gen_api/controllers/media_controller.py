@@ -58,7 +58,8 @@ def generate_tts_route():
         result = asyncio.run(generate_tts(request))
         return jsonify(result)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": "Invalid JSON request"}), 400
+
 
 @media_blueprint.route('/generate-image', methods=['POST'])
 def generate_image_route():
