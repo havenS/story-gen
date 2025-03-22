@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  nestjs:
+    image: node:22
+    # platform: linux/amd64  # Forcer l'architecture Intel
+    volumes:
+      - .:/workspace
+    working_dir: /workspace/backend
+    command: sh -c "apt-get update && apt-get install -y default-jdk ffmpeg libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 libnss3 libgconf-2-4 libasound2 && npm install && npx prisma generate && npx puppeteer browsers install chrome && sleep infinity"
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+        reservations:
+          memory: 8G
+
+  vite:
+    image: arm64v8/node:22
+    volumes:
+      - .:/workspace  # Monte également le répertoire racine dans le conteneur
+    working_dir: /workspace/frontend
+    command: sh -c "npm install && sleep infinity"
+    ports:
+      - "5173:5180"
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    ports:
+      - "5431:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G

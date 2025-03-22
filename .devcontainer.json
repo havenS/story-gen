@@ -1,0 +1,16 @@
+{
+  "name": "Full Stack Dev",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "nestjs",  // Service principal pour le dev container
+  "workspaceFolder": "/workspace",  // Dossier racine monté
+  "forwardPorts": [3001],
+  "extensions": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "planbcoding.vscode-react-refactor",
+    "yoavbls.pretty-ts-errors"
+  ],
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash"
+  }
+}

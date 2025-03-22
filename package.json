@@ -1,0 +1,17 @@
+{
+  "name": "root-project",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "frontend": "npm run dev --prefix frontend",
+    "backend": "npm run start:dev --prefix backend",
+    "dev": "npm-run-all --parallel frontend backend"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "openai": "^4.71.0"
+  }
+}

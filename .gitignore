@@ -1,0 +1,10 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+.history
+gen_api/*.mp4
+gen_api/*.mp3
+gen_api/*.wav
+gen_api/*.png
+__pycache__
