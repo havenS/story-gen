@@ -1,40 +1,62 @@
-import DefaultLayout from "./layouts/default";
-import { TypeDto } from "./services/api-client";
 import { useEffect, useState } from "react";
-import TypeBlock from "./components/type-block";
-import { api } from "./services/api";
 import { useQuery } from "@tanstack/react-query";
+import { TypeDto, StoryDto } from "./services/api-client";
+import { api } from "./services/api";
+import DefaultLayout from "./layouts/default";
 import Spinner from "./components/spinner";
-import { cn } from "./lib/utils";
+import { CreateStoryCard } from "./components/create-story-card";
+import StoryCard from "./components/story-card";
+import { StoriesSection } from "./components/stories-grid";
+import { AxiosResponse } from "axios";
 
 function App() {
-  const [types, setTypes] = useState([]);
+  const [types, setTypes] = useState<TypeDto[]>([]);
+  const [storiesByType, setStoriesByType] = useState<
+    Record<number, StoryDto[]>
+  >({});
 
   useEffect(() => {
-    api.findAllTypes().then((response: any) => {
+    api.findAllTypes().then((response: AxiosResponse) => {
       setTypes(response.data);
     });
   }, []);
 
+  // Fetch stories for each type
+  useEffect(() => {
+    const fetchStoriesForType = async (typeId: number) => {
+      try {
+        const response = await api.findAllStoriesByType(String(typeId));
+        setStoriesByType((prev) => ({
+          ...prev,
+          [typeId]: response.data as StoryDto[],
+        }));
+      } catch (error) {
+        console.error(`Error fetching stories for type ${typeId}:`, error);
+      }
+    };
+
+    types.forEach((type) => {
+      if (type.id) {
+        fetchStoriesForType(type.id);
+      }
+    });
+  }, [types]);
+
   const apiQuery = useQuery({
     queryKey: ["service-api"],
-    queryFn: () => {
-      return api.ping();
-    },
+    queryFn: () => api.ping(),
     retry: 0,
   });
+
   const llmQuery = useQuery({
     queryKey: ["service-llm"],
-    queryFn: () => {
-      return api.pingLLM();
-    },
+    queryFn: () => api.pingLLM(),
     retry: 0,
   });
+
   const genApiQuery = useQuery({
     queryKey: ["service-gen-api"],
-    queryFn: () => {
-      return api.pingGenApi();
-    },
+    queryFn: () => api.pingGenApi(),
     retry: 0,
   });
 
@@ -42,83 +64,64 @@ function App() {
     return <Spinner size={70} />;
   }
 
-  if (genApiQuery.isError || apiQuery.isError) {
-    return (
-      <DefaultLayout>
-        <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-          <div className="inline-block text-center justify-center">
-            <h1 className="text-3xl font-bold text-red-500">
-              Some required services are down
-            </h1>
-            <div className="flex flex-row justify-between items-center">
-              <div className="flex flex-row">
-                <span
-                  className={cn(
-                    "flex",
-                    "h-2",
-                    "w-2",
-                    "translate-y-1",
-                    "rounded-full",
-                    apiQuery.isError ? "bg-red-500" : "bg-green-500"
-                  )}
-                />
-                <p className="text-sm font-medium leading-none ml-2">
-                  Main API service
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-row justify-between items-center">
-              <div className="flex flex-row">
-                <span
-                  className={cn(
-                    "flex",
-                    "h-2",
-                    "w-2",
-                    "translate-y-1",
-                    "rounded-full",
-                    llmQuery.isError ? "bg-red-500" : "bg-green-500"
-                  )}
-                />
-                <p className="text-sm font-medium leading-none ml-2">
-                  LLM API service
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-row justify-between items-center">
-              <div className="flex flex-row">
-                <span
-                  className={cn(
-                    "flex",
-                    "h-2",
-                    "w-2",
-                    "translate-y-1",
-                    "rounded-full",
-                    genApiQuery.isError ? "bg-red-500" : "bg-green-500"
-                  )}
-                />
-                <p className="text-sm font-medium leading-none ml-2">
-                  Generation API service
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </DefaultLayout>
+  const getStoriesForType = (typeId: number) => {
+    const stories = storiesByType[typeId] || [];
+    const sortedStories = [...stories].sort((a, b) => {
+      return (
+        new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime()
+      );
+    });
+
+    const publishedStories = sortedStories.filter((story) =>
+      story.publishings?.some((pub) => pub.youtube_id !== null)
     );
-  }
+    const unpublishedStories = sortedStories.filter(
+      (story) => !story.publishings?.some((pub) => pub.youtube_id !== null)
+    );
+
+    return {
+      published: publishedStories,
+      unpublished: unpublishedStories,
+    };
+  };
 
   return (
-    <>
-      <DefaultLayout>
-        <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-          <div className="inline-block text-center justify-center">
-            {types.map((type: TypeDto) => (
-              <TypeBlock key={type.id} type={type} />
-            ))}
-          </div>
-        </section>
-      </DefaultLayout>
-    </>
+    <DefaultLayout>
+      <div className="flex justify-center w-full">
+        <div className="w-full max-w-7xl px-4 py-6 space-y-8">
+          {types.map((type) => {
+            const { published, unpublished } = getStoriesForType(type.id!);
+
+            return (
+              <StoriesSection
+                key={type.id}
+                title={type.name}
+                className="pt-4"
+                createButton={
+                  <CreateStoryCard
+                    title="Add new"
+                    description="Create a new story"
+                    onClick={() => {
+                      // Handle story creation
+                    }}
+                  />
+                }
+                publishedContent={
+                  published.length > 0 &&
+                  published.map((story) => (
+                    <StoryCard key={story.id} story={story} />
+                  ))
+                }
+              >
+                {unpublished.map((story) => (
+                  <StoryCard key={story.id} story={story} />
+                ))}
+              </StoriesSection>
+            );
+          })}
+        </div>
+      </div>
+    </DefaultLayout>
   );
 }
 

@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export default ({
+const Spinner = ({
   className,
   size = 24,
 }: {
@@ -24,3 +24,5 @@ export default ({
     </svg>
   );
 };
+
+export default Spinner;

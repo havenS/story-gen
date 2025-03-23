@@ -1,4 +1,4 @@
-import { TypeDto } from "../services/api-client";
+import { StoryDto, TypeDto } from "../services/api-client";
 import Spinner from "./spinner";
 import { api } from "../services/api";
 import CreateStoryButton from "./create-story-button";
@@ -10,6 +10,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion";
+import { AxiosResponse } from "axios";
 
 interface TypeBlockProps {
   type: TypeDto;
@@ -22,8 +23,8 @@ const TypeBlock: React.FC<TypeBlockProps> = ({ type }) => {
     queryFn: () => {
       return api
         .findAllStoriesByType(`${type.id}`)
-        .then((response: any) =>
-          response.data.sort((a: any, b: any) => b.id - a.id)
+        .then((response: AxiosResponse) =>
+          response.data.sort((a: StoryDto, b: StoryDto) => b.id! - a.id!)
         );
     },
   });
@@ -50,8 +51,10 @@ const TypeBlock: React.FC<TypeBlockProps> = ({ type }) => {
               className="flex flex-wrap space-y-4 justify-evenly"
             >
               {[...query.data]
-                ?.filter((story: any) => story.publishings.length === 0)
-                .map((story: any) => (
+                ?.filter(
+                  (story: StoryDto) => (story.publishings ?? []).length === 0
+                )
+                .map((story: StoryDto) => (
                   <StoryCard key={story.id} story={story} />
                 ))}
             </div>
@@ -65,11 +68,10 @@ const TypeBlock: React.FC<TypeBlockProps> = ({ type }) => {
               className="flex flex-wrap space-y-4 justify-evenly"
             >
               {[...query.data]
-                ?.filter((story: any) => {
-                  console.log(story);
-                  return story.publishings.length > 0;
+                ?.filter((story: StoryDto) => {
+                  return (story.publishings?.length ?? 0) > 0;
                 })
-                .map((story: any) => (
+                .map((story: StoryDto) => (
                   <StoryCard key={story.id} story={story} />
                 ))}
             </div>
