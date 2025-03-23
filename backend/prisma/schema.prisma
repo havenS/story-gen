@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model chapters {
+  id               Int     @id @default(autoincrement()) @map("id")
+  number           Int
+  title            String  @db.VarChar
+  summary          String
+  content          String?
+  background_sound String?  @db.VarChar
+  audio_url        String?  @db.VarChar
+  video_url        String?  @db.VarChar
+  stories_id       Int
+  stories          stories @relation(fields: [stories_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "id")
+}
+
+model stories {
+  id                Int         @id @default(autoincrement()) @map("id")
+  name              String      @db.VarChar
+  synopsis          String
+  image_prompt      String?     @db.VarChar
+  background_image  String?     @db.VarChar
+  audio_url         String?     @db.VarChar
+  video_url         String?     @db.VarChar
+  thumbnail_url     String?     @db.VarChar
+  types_id          Int
+  chapters          chapters[]
+  types             types      @relation(fields: [types_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "id")
+  publishings       publishing[]
+}
+
+model types {
+  id                  Int       @id @default(autoincrement()) @map("id")
+  name                String    @db.VarChar
+  story_prompt        String
+  chapter_prompt      String
+  image_prompt        String
+  sound_prompt        String
+  stories             stories[]
+  youtube_channel_id  String? @db.VarChar
+  youtube_playlist_id String? @db.VarChar
+}
+
+model publishing {
+  id                    Int      @id @default(autoincrement()) @map("id")
+  story_id              Int
+  story                 stories   @relation(fields: [story_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "id")
+  title                 String   @db.VarChar
+  description           String
+  tags                  String[]
+  youtube_id            String   @db.VarChar
+  patreon_published     Boolean  @default(false)
+  instagram_published   Boolean  @default(false)
+  spotify_id            String?  @db.VarChar
+  tiktok_published      Boolean  @default(false)
+}

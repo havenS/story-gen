@@ -279,15 +279,6 @@ def generate_full_story_video(request):
     except Exception as e:
         logger.error(f"Error exporting the video: {e}")
         return None, str(e)
-    finally:
-        # Delete the temporary files after use
-        for temp_path in [temp_chapter_1_path, temp_chapter_2_path, temp_chapter_3_path]:
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-        if title_voiceover_path:
-            os.remove(title_voiceover_path)
-        os.remove(output_filename)
-        logger.info("Temporary files deleted")
 
 def generate_short(request):
     logger.info("Starting chapter short generation.")

@@ -230,8 +230,7 @@ def generate_thumbnail(request):
         image.save(filename)
         print('Thumbnail generated and saved')
 
-        result = send_file(filename, as_attachment=True)
-        return result
+        return filename, None
     except Exception as e:
         print(f"Error generating thumbnail: {str(e)}")
         return jsonify({"error": str(e)}), 500
@@ -248,14 +247,6 @@ def generate_thumbnail(request):
                 waves.close()
             except Exception:
                 pass
-                
-        # Clean up temporary files
-        for path in [temp_image_path, temp_vignette_path]:
-            if path and os.path.exists(path):
-                try:
-                    os.remove(path)
-                except Exception:
-                    pass
         
         # Run garbage collection
         gc.collect()
