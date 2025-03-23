@@ -1,0 +1,14 @@
+.gitignore
+.npmignore
+api.ts
+base.ts
+clients/default-api.ts
+common.ts
+configuration.ts
+git_push.sh
+index.ts
+models/chapter-dto.ts
+models/index.ts
+models/publishing-dto.ts
+models/story-dto.ts
+models/type-dto.ts
