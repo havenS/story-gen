@@ -9,18 +9,22 @@ This is the backend API for the Story Generation project. It handles video, audi
 Before installing the Python packages, you need to install these system dependencies:
 
 #### On macOS:
+
 ```
 $ brew install espeak ffmpeg imagemagick
 $ export AENEAS_WITH_CEW=False
 ```
 
 #### On Ubuntu/Debian:
+
 ```
 $ sudo apt-get install espeak ffmpeg imagemagick
 ```
 
 #### On Windows:
+
 Download and install:
+
 - espeak: http://espeak.sourceforge.net/download.html
 - ffmpeg: https://ffmpeg.org/download.html
 - imagemagick: https://imagemagick.org/script/download.php
@@ -75,27 +79,33 @@ $ python -m pytest -m "not integration"
 # Requirements
 
 ## Global
+
 ```
 $ conda create -n story_gen python=3.9 -y
 $ conda activate story_gen
 ```
 
 ## Intro-api
+
 ```
-$ brew install imagemagick sox sound-touch
+$ brew install imagemagick sox sound-touch espeak ffmpeg
 $ conda config --add channels conda-forge
 $ conda install montreal-forced-aligner
-$ mfa model download acoustic english_us_arpa 
-$ mfa model download dictionary english_us_arpa 
+$ mfa model download acoustic english_us_arpa
+$ mfa model download dictionary english_us_arpa
 $ pip install -r requirements.txt
+$ pip install "setuptools<60.0"
+$ AENEAS_WITH_CEW=False pip install aeneas
 ```
 
 # Run
+
 ```
-$ PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0  waitress-serve --port=8001 --threads=1 --channel-timeout=3000 app:app
+$ PYTORCH_ENABLE_MPS_FALLBACK=1 PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0  waitress-serve --port=8001 --threads=1 --channel-timeout=3000 app:app
 ```
 
 # Docker
+
 ```
 $ docker build -t story_gen .
 ```

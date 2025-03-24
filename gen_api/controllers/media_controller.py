@@ -1,4 +1,5 @@
 import asyncio
+import os
 from flask import Blueprint, request, jsonify, send_file
 from services.tts_service import generate_tts
 from services.image_service import generate_image, generate_thumbnail
@@ -78,13 +79,17 @@ def generate_image_route():
         if error:
             return jsonify({'error': error}), 400
 
-        if not data or 'text' not in data:
+        if not data or 'prompt' not in data:
             return jsonify({'error': 'Missing required fields'}), 400
             
-        result = generate_image(request)
-        return jsonify(result)
+        output_filename = generate_image(request)
+        
+        return send_file(output_filename, as_attachment=True)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    finally:
+        if os.path.exists(output_filename):
+            os.remove(output_filename)
 
 @media_blueprint.route('/generate-chapter', methods=['POST'])
 def generate_chapter_video_route():

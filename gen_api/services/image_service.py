@@ -20,7 +20,7 @@ model_loaded = False
 
 def load_model():
     """
-    Load the diffusion model from Hugging Face.
+    Load the diffusion model from Hugging Face with memory optimizations.
     This function is skipped in testing mode.
     """
     global pipe, generator, model_loaded
@@ -44,23 +44,34 @@ def load_model():
     if hf_token:
         login(token=hf_token)
     
-    # Load the model
-    scheduler = EulerDiscreteScheduler.from_pretrained(model_id, subfolder="scheduler")
-    pipe = DiffusionPipeline.from_pretrained(
-        model_id, 
-        scheduler=scheduler,
-    )
-    
-    # Configure the model
-    pipe.to("mps")
-    pipe.enable_attention_slicing()
-    pipe.enable_vae_slicing()
-    pipe.safety_checker = None
-    
-    # Set up the generator for reproducibility
-    generator = torch.Generator(device=pipe.device).manual_seed(42)
-    model_loaded = True
-    print("Model loaded successfully")
+    try:
+        # Load the model with memory optimizations
+        scheduler = EulerDiscreteScheduler.from_pretrained(model_id, subfolder="scheduler")
+        pipe = DiffusionPipeline.from_pretrained(
+            model_id, 
+            scheduler=scheduler,
+            low_cpu_mem_usage=True,
+        )
+        
+        # Configure the model with memory optimizations
+        pipe.to("mps")
+        pipe.enable_attention_slicing()  # Slice attention into smaller chunks
+        pipe.enable_vae_slicing()  # Slice VAE into smaller chunks
+        pipe.safety_checker = None
+        
+        # Set up the generator for reproducibility
+        generator = torch.Generator(device=pipe.device).manual_seed(42)
+        model_loaded = True
+        print("Model loaded successfully with memory optimizations")
+        
+    except Exception as e:
+        print(f"Error loading model: {str(e)}")
+        # Clean up on error
+        if pipe:
+            del pipe
+        pipe = None
+        model_loaded = False
+        raise
 
 def generate_image(request):
     """
@@ -69,7 +80,12 @@ def generate_image(request):
     global pipe
     
     print("Generating image")
+    
     data = request.get_json()
+
+    if data is None:
+        return jsonify({"error": "No JSON body provided"}), 400
+
     prompt = data.get('prompt')
     width, height = int(data.get('width', 1280)), int(data.get('height', 720))
     output_filename = data.get('filename', "output_image.png")
@@ -113,41 +129,37 @@ def generate_image(request):
                           "duplicate faces, photo, 3d, plastic, photorealistic, tiny, blurry, blurred, doll")
         
         # Generate the image
-        image = pipe(prompt=prompt, 
+        print('Generating image')
+        result = pipe(prompt=prompt, 
                     negative_prompt=negative_prompt,
                     num_inference_steps=inference_steps, 
                     width=width, 
                     height=height,
-                    generator=generator).images[0]
+                    generator=generator
+                    )
+        image = result.images[0]
         
         print('Image generated')
         image.save(output_filename)
         print('Image saved')
 
         # Clear the PyTorch cache after generation
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
         if hasattr(torch.mps, 'empty_cache'):
             torch.mps.empty_cache()
         
         gc.collect()  # Run garbage collection
         
-        result = send_file(output_filename, as_attachment=True)
         # Proper cleanup
         image.close()
-        return result
+        
+        return output_filename
     except Exception as e:
         print(f"Error generating image: {str(e)}")
         # Clear caches even on error
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
         if hasattr(torch.mps, 'empty_cache'):
             torch.mps.empty_cache()
         gc.collect()
         return jsonify({"error": str(e)}), 500
-    finally:
-        if os.path.exists(output_filename):
-            os.remove(output_filename)
     
 def generate_thumbnail(request):
     """
