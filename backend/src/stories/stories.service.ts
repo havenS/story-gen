@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { LLMService } from '../llm/llm.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TypeDto } from '../types/dto/type.dto';
@@ -17,6 +17,8 @@ type StoryWithRelations = Prisma.storiesGetPayload<{
 
 @Injectable()
 export class StoriesService {
+  private readonly logger = new Logger(StoriesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly llmService: LLMService,
@@ -108,9 +110,9 @@ export class StoriesService {
 
     const folderName = this.getFolderName(story);
     for (const chapter of story.chapters) {
-      console.log(`Chapter ${chapter.number} generation...`)
+      this.logger.log(`Chapter ${chapter.number} generation...`)
       await this.genApiService.generateChapterMedia(chapter, folderName,).then(async (filesName) => {
-        console.log(`Chapter ${chapter.number} media generated.`)
+        this.logger.log(`Chapter ${chapter.number} media generated.`)
 
         await this.prisma.chapters.update({
           where: { id: chapter.id },
@@ -129,14 +131,13 @@ export class StoriesService {
   async generateStoryBackgroundImage(story: Partial<StoryDto>) {
     const folderName = this.getFolderName(story)
     const backgroundImageFilename = 'background-image.jpg'
-    console.log("Background image filename: ", `${folderName}/${backgroundImageFilename}`)
 
     const backgroundImagePrompt = await this.typesService.getImagePrompt(story.types_id, story.image_prompt)
-    console.log("Generating background image ...")
+    this.logger.log("Generating background image ...")
     await this.genApiService.generateImage(backgroundImagePrompt, folderName, backgroundImageFilename).then(async () => {
-      console.log("Background image generated.")
+      this.logger.log("Background image generated.")
       await this.updateStory(story.id, { background_image: `${folderName}/${backgroundImageFilename}` })
-      console.log("Story updated.")
+      this.logger.log("Story updated.")
     })
   }
 
@@ -159,7 +160,6 @@ export class StoriesService {
     const existingStories = await this.findAllByType(types_id);
     const storyInfo = await this.llmService.generateStoryInfo(process.env.OLLAMA_STORY_INFO_MODEL, types.story_prompt, existingStories);
     const imagePrompt = await this.llmService.generateStoryImagePrompt(process.env.OLLAMA_STORY_INFO_MODEL, storyInfo.title, storyInfo.synopsis);
-    console.log(imagePrompt);
 
     // First create the story
     const story = await this.prisma.stories.create({
@@ -317,29 +317,29 @@ export class StoriesService {
   }
 
   async createAndGenerateFullStory(typeId: number): Promise<StoryDto> {
-    console.log('Starting story creation and generation process...');
+    this.logger.log('Starting story creation and generation process...');
 
     // Step 1: Create new story with basic info
-    console.log('Step 1: Creating new story...');
+    this.logger.log('Step 1: Creating new story...');
     const story = await this.create(typeId);
 
     // Step 2: Generate background image
-    console.log('Step 2: Generating background image...');
+    this.logger.log('Step 2: Generating background image...');
     await this.generateStoryBackgroundImage(story);
 
     // Step 3: Generate chapters content
-    console.log('Step 3: Generating chapters content...');
+    this.logger.log('Step 3: Generating chapters content...');
     await this.generateChaptersContent(story.id);
 
     // Step 4: Generate chapters media
-    console.log('Step 4: Generating chapters media...');
+    this.logger.log('Step 4: Generating chapters media...');
     await this.generateChaptersMedia(story.id);
 
     // Step 5: Generate full story media
-    console.log('Step 5: Generating full story media...');
+    this.logger.log('Step 5: Generating full story media...');
     await this.generateFullStoryMedia(story.id);
 
-    console.log('Story creation and generation process completed successfully!');
+    this.logger.log('Story creation and generation process completed successfully!');
     return this.findOne(story.id);
   }
 }

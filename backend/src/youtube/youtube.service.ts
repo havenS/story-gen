@@ -26,7 +26,7 @@ export class YoutubeService {
     this.youtubeClient = google.youtube({
       version: 'v3',
       auth: this.oauth2Client,
-      timeout: 60000, // Increase timeout to 60 seconds
+      timeout: 60000,
     });
 
     // Charger les tokens si disponibles

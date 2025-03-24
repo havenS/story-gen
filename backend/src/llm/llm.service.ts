@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { ChapterDto } from 'src/chapters/dto/chapter.dto';
 import { StoryDto } from 'src/stories/dto/story.dto';
@@ -6,6 +6,8 @@ const fs = require('fs');
 
 @Injectable()
 export class LLMService {
+  private readonly logger = new Logger(LLMService.name);
+
   async pingLLM() {
     const response = await axios.get(`${process.env.OLLAMA_HOST}`);
     return response.data;
@@ -50,13 +52,11 @@ export class LLMService {
   };
 
   async generateStoryInfo(model, prompt: string, history: StoryDto[]) {
-    console.log('Generating story info with model:', model)
+    this.logger.log('Generating story info with model:', model)
     const firstItem = history.map(({ name }) => name).join(', ');
     const messages = [
       { role: 'user', content: `${prompt} > "Whispers" is forbidden in the title. You are not allowed to reuse these existing stories' titles or topics: ${firstItem}` },
     ]
-
-    console.log('Prompt:', messages)
 
     const call = await this.callLLM(model, 'chat', true, 0.2, messages, history.length)
 
@@ -72,7 +72,7 @@ export class LLMService {
     const call = await this.callLLM(model, 'chat', false, 1, messages)
 
     if (call.message.content.split(' ').length > 25) {
-      console.log(`Prompt too long, ${call.message.content.split(' ').length} tokens, retrying...`)
+      this.logger.warn(`Prompt too long, ${call.message.content.split(' ').length} tokens, retrying...`)
       return this.generateStoryImagePrompt(model, title, synopsis);
     }
     return call.message.content
