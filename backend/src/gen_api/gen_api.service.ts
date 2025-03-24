@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as fs from 'fs';
-import { join, basename } from 'path';
+import { join } from 'path';
 import { ChapterDto } from 'src/chapters/dto/chapter.dto';
+import { LLMService } from 'src/llm/llm.service';
 import { StoryDto } from 'src/stories/dto/story.dto';
 
 const extractAudio = require('ffmpeg-extract-audio')
 
 @Injectable()
 export class GenApiService {
+  constructor(private readonly llmService: LLMService) { }
   async pingGenApi() {
     const response = await axios.get(`${process.env.GEN_API_URL}`);
     return response.data;
@@ -148,6 +150,36 @@ export class GenApiService {
 
     await this.generateThumbnail(folderName, story.name, story.types.name, backgroundImage, thumbnailFileName);
 
+    for (const chapter of story.chapters) {
+      await this.generateStoryShortMedia(chapter, folderName, backgroundImage);
+    }
+
     return { audioFileName, videoFileName, thumbnailFileName };
+  }
+
+  async generateStoryShortMedia(chapter: ChapterDto, folderName: string, backgroundImage: string): Promise<{ videoFileName: string }> {
+    const directoryPath = join(__dirname, '..', '..', '..', 'public', 'generation', folderName);
+    const videoFileName = `short_${chapter.number}.mp4`;
+    const videoPath = join(directoryPath, videoFileName);
+    const backgroundImagePath = join(directoryPath, '..', backgroundImage);
+    const backgroundImageStream = fs.readFileSync(backgroundImagePath);
+
+    const shortContentText = await this.llmService.generateChapterExceptForShort(process.env.OLLAMA_STORY_INFO_MODEL, chapter.content);
+
+    const formData = new FormData();
+    formData.append('background_image', new Blob([backgroundImageStream]), backgroundImage);
+    formData.append('filename', videoFileName);
+    formData.append('text', shortContentText);
+    formData.append('type', 'Horror');
+
+    const response = await axios.post(`${process.env.GEN_API_URL}/generate-short`, formData, {
+      responseType: 'arraybuffer',
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    const buffer = Buffer.from(response.data, 'binary');
+    fs.writeFileSync(videoPath, buffer);
+
+    return { videoFileName };
   }
 }

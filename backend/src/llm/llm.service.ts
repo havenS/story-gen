@@ -100,10 +100,6 @@ export class LLMService {
 
     const call = await this.callLLM(model, 'chat', false, 0, messages)
     const { content } = call.message;
-
-    // const timestamp = new Date().toISOString();
-    // fs.writeFileSync(`content_${timestamp}.txt`, content);
-
     const regex = /\*\*(.+?)\*\*\s*([\s\S]+?)(?=\*\*|$)/g;
 
     return Array.from(content.matchAll(regex), match => match[2].trim());

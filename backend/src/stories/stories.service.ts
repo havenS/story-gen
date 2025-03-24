@@ -5,7 +5,6 @@ import { TypeDto } from '../types/dto/type.dto';
 import { StoryDto } from './dto/story.dto';
 import { TypesService } from '../types/types.service';
 import { GenApiService } from '../gen_api/gen_api.service';
-import { stories as Story, chapters as Chapter, types as Type, publishing as Publishing } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 
 type StoryWithRelations = Prisma.storiesGetPayload<{
@@ -74,7 +73,7 @@ export class StoriesService {
       }
     }
     for (const chapter of story.chapters) {
-      const { background_sound } = await this.llmService.getChapterBackgroundSound(process.env.OLLAMA_CHAPTER_BACKGROUND_SOUND_MODEL, story.types.sound_prompt, chapter);
+      const { background_sound } = await this.llmService.getChapterBackgroundSound(process.env.OLLAMA_STORY_INFO_MODEL, story.types.sound_prompt, chapter);
       chapter.background_sound = background_sound;
 
       if (chapter.number === 1) {
@@ -160,14 +159,10 @@ export class StoriesService {
     const existingStories = await this.findAllByType(types_id);
     const storyInfo = await this.llmService.generateStoryInfo(process.env.OLLAMA_STORY_INFO_MODEL, types.story_prompt, existingStories);
     const imagePrompt = await this.llmService.generateStoryImagePrompt(process.env.OLLAMA_STORY_INFO_MODEL, storyInfo.title, storyInfo.synopsis);
-    console.log(imagePrompt)
-    const chapters = [
-      { number: 1, title: storyInfo.chapterOneTitle, summary: storyInfo.chapterOneSummary },
-      { number: 2, title: storyInfo.chapterTwoTitle, summary: storyInfo.chapterTwoSummary },
-      { number: 3, title: storyInfo.chapterThreeTitle, summary: storyInfo.chapterThreeSummary },
-    ];
+    console.log(imagePrompt);
 
-    return this.prisma.stories.create({
+    // First create the story
+    const story = await this.prisma.stories.create({
       data: {
         name: storyInfo.title,
         synopsis: storyInfo.synopsis,
@@ -176,14 +171,27 @@ export class StoriesService {
           connect: {
             id: types_id,
           }
-        },
-        chapters: {
-          createMany: {
-            data: chapters,
-          }
         }
       },
     });
+
+    // Then create the chapters one by one
+    const chapters = [
+      { number: 1, title: storyInfo.chapterOneTitle, summary: storyInfo.chapterOneSummary },
+      { number: 2, title: storyInfo.chapterTwoTitle, summary: storyInfo.chapterTwoSummary },
+      { number: 3, title: storyInfo.chapterThreeTitle, summary: storyInfo.chapterThreeSummary },
+    ];
+
+    for (const chapter of chapters) {
+      await this.prisma.chapters.create({
+        data: {
+          ...chapter,
+          stories_id: story.id
+        }
+      });
+    }
+
+    return story;
   }
 
   async create(typeId: number): Promise<StoryDto> {
@@ -195,31 +203,16 @@ export class StoriesService {
       throw new NotFoundException(`Type with ID ${typeId} not found`);
     }
 
-    const history = await this.findAllByType(typeId);
-    const storyInfo = await this.llmService.generateStoryInfo(process.env.STORY_MODEL, type.story_prompt, history);
-    console.log("Story info: ", storyInfo);
+    try {
+      // Use createStory which handles the story and chapters creation properly
+      const story = await this.createStory(typeId);
 
-    const story = await this.prisma.stories.create({
-      data: {
-        name: storyInfo.title,
-        synopsis: storyInfo.synopsis,
-        types_id: typeId,
-        chapters: {
-          create: storyInfo.chapters.map((chapter, index) => ({
-            number: index + 1,
-            title: chapter.title,
-            summary: chapter.summary,
-          })),
-        },
-      },
-      include: {
-        types: true,
-        chapters: true,
-        publishings: true,
-      },
-    });
-
-    return story;
+      // Return the complete story with chapters
+      return this.findOne(story.id);
+    } catch (error) {
+      console.error('Error creating story:', error);
+      throw error;
+    }
   }
 
   async findOne(id: number): Promise<StoryDto> {
@@ -245,13 +238,13 @@ export class StoriesService {
     const chapters = await Promise.all(
       story.chapters.map(async (chapter) => {
         const content = await this.llmService.generateChapterContent(
-          process.env.CHAPTER_MODEL,
+          process.env.OLLAMA_CHAPTER_CONTENT_MODEL,
           story.types.chapter_prompt,
           story,
         );
 
         const backgroundSound = await this.llmService.getChapterBackgroundSound(
-          process.env.SOUND_MODEL,
+          process.env.OLLAMA_CHAPTER_CONTENT_MODEL,
           story.types.sound_prompt,
           chapter,
         );
@@ -321,5 +314,32 @@ export class StoriesService {
       where: { id: storyId },
       data,
     });
+  }
+
+  async createAndGenerateFullStory(typeId: number): Promise<StoryDto> {
+    console.log('Starting story creation and generation process...');
+
+    // Step 1: Create new story with basic info
+    console.log('Step 1: Creating new story...');
+    const story = await this.create(typeId);
+
+    // Step 2: Generate background image
+    console.log('Step 2: Generating background image...');
+    await this.generateStoryBackgroundImage(story);
+
+    // Step 3: Generate chapters content
+    console.log('Step 3: Generating chapters content...');
+    await this.generateChaptersContent(story.id);
+
+    // Step 4: Generate chapters media
+    console.log('Step 4: Generating chapters media...');
+    await this.generateChaptersMedia(story.id);
+
+    // Step 5: Generate full story media
+    console.log('Step 5: Generating full story media...');
+    await this.generateFullStoryMedia(story.id);
+
+    console.log('Story creation and generation process completed successfully!');
+    return this.findOne(story.id);
   }
 }

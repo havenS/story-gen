@@ -84,16 +84,12 @@ export class YoutubeService {
     try {
       this.logger.log('Retrieving token');
       await this.loadToken();
-      this.logger.log(`Uploading video: ${metadata.title}`);
+
+      this.logger.log(`Uploading video: ${metadata.title} - ${videoPath}`);
+
       const publishHour = parseInt(process.env.YOUTUBE_DEFAULT_PUBLISH_HOUR, 10);
       const publishDate = new Date();
       publishDate.setHours(publishHour, 0, 0);
-
-      console.log({
-        title: metadata.title,
-        description: metadata.description,
-        tags: metadata.tags,
-      })
 
       const videoResponse = await this.youtubeClient.videos.insert({
         part: ['snippet', 'status'],

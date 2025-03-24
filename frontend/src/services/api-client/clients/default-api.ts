@@ -65,6 +65,36 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @summary Create a new story and generate all content and media
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createAndGenerateFullStory: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/stories/create-and-generate`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -599,6 +629,18 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Create a new story and generate all content and media
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async createAndGenerateFullStory(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createAndGenerateFullStory(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.createAndGenerateFullStory']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -809,6 +851,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
+         * @summary Create a new story and generate all content and media
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createAndGenerateFullStory(options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
+            return localVarFp.createAndGenerateFullStory(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -969,6 +1020,17 @@ export class DefaultApi extends BaseAPI {
      */
     public create(options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).create(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create a new story and generate all content and media
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public createAndGenerateFullStory(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).createAndGenerateFullStory(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

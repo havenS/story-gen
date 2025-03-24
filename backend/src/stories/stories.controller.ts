@@ -69,4 +69,13 @@ export class StoriesController {
 
     return this.storiesService.findOne(parseInt(id, 10));
   }
+
+  @Post('create-and-generate')
+  @ApiOperation({ summary: 'Create a new story and generate all content and media' })
+  @ApiResponse({ status: 201, description: 'The story has been created and all content has been generated.', type: StoryDto })
+  async createAndGenerateFullStory(
+    @Body('types_id') types_id: number,
+  ): Promise<StoryDto> {
+    return this.storiesService.createAndGenerateFullStory(types_id);
+  }
 }

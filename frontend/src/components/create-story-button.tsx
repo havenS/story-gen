@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
-import { CreateStoryDto, TypeDto } from "@/services/api-client";
+import { TypeDto } from "@/services/api-client";
 import {
   Card,
   CardHeader,
@@ -20,9 +20,14 @@ function CreateStoryButton({ type }: CreateStoryButtonProps) {
   const queryClient = useQueryClient();
 
   const createStoryMutation = useMutation({
-    mutationFn: (data: CreateStoryDto) => api.createStory(data),
+    mutationFn: () => api.createAndGenerateFullStory({ data: { types_id: type.id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [[`${type.id}-stories`]] });
+      alert("Story created and generated successfully!");
+    },
+    onError: (error) => {
+      alert("Failed to create and generate story. Please try again.");
+      console.error("Error creating story:", error);
     },
   });
 
@@ -31,19 +36,22 @@ function CreateStoryButton({ type }: CreateStoryButtonProps) {
       <CardHeader>
         <CardTitle>New Story</CardTitle>
         <CardDescription>
-          Create a new {type.name?.toLocaleLowerCase()} story
+          Create and generate a new {type.name?.toLocaleLowerCase()} story
         </CardDescription>
       </CardHeader>
       <CardFooter>
-        <div className="flex justify-center items-center w-full">
+        <div className="flex flex-col items-center gap-2 w-full">
           {createStoryMutation.isPending ? (
-            <Spinner size={24} />
+            <div className="flex flex-col items-center gap-2">
+              <Spinner size={24} />
+              <span className="text-sm text-muted-foreground">Generating story...</span>
+            </div>
           ) : (
             <Button
               className="w-full"
-              onClick={() => createStoryMutation.mutate({ types_id: type.id })}
+              onClick={() => createStoryMutation.mutate()}
             >
-              Start creation
+              Create & Generate
             </Button>
           )}
         </div>
