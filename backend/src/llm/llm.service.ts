@@ -56,12 +56,18 @@ export class LLMService {
         },
       );
 
+      if (!response.data) {
+        this.logger.error('Empty response from LLM');
+        throw new Error('Empty response from LLM');
+      }
+
       return response.data;
     } catch (error) {
-      console.error(
-        'Erreur lors de la génération avec Ollama :',
+      this.logger.error(
+        'Error calling LLM:',
         error.response ? error.response.data : error.message,
       );
+      throw new Error('Failed to call LLM: ' + (error.response ? error.response.data : error.message));
     }
   }
 
@@ -71,7 +77,7 @@ export class LLMService {
     const messages = [
       {
         role: 'user',
-        content: `${prompt} > "Whispers" is forbidden in the title. You are not allowed to reuse these existing stories' titles or topics: ${firstItem}`,
+        content: `${prompt} > "Whispers" is forbidden in the title. You are not allowed to reuse these existing stories' titles or topics: ${firstItem}. Return a JSON object with the following structure: { "title": "string", "synopsis": "string", "chapterOneTitle": "string", "chapterOneSummary": "string" }`,
       },
     ];
 
@@ -84,9 +90,22 @@ export class LLMService {
       history.length,
     );
 
-    fs.writeFileSync('story_info.json', call.message.content);
+    if (!call?.message?.content) {
+      this.logger.error('LLM response is empty');
+      throw new Error('Failed to generate story info');
+    }
 
-    return JSON.parse(call.message.content);
+    try {
+      const storyInfo = JSON.parse(call.message.content);
+      if (!storyInfo.title || !storyInfo.synopsis || !storyInfo.chapterOneTitle || !storyInfo.chapterOneSummary) {
+        this.logger.error('Invalid story info format:', storyInfo);
+        throw new Error('Invalid story info format');
+      }
+      return storyInfo;
+    } catch (error) {
+      this.logger.error('Error parsing story info:', error);
+      throw new Error('Failed to parse story info');
+    }
   }
 
   async generateStoryImagePrompt(model, title: string, synopsis: string) {

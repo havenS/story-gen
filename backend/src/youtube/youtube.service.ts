@@ -242,22 +242,30 @@ export class YoutubeService {
 
   async generateMetadata(story: Partial<StoryDto>, thumbnailPath: string) {
     try {
+      if (!story.name || !story.synopsis) {
+        throw new Error('Story is missing required fields (name or synopsis)');
+      }
+
       const generatedStoryData = await this.llmService.generateYouTubeMetadata(
         process.env.OLLAMA_MARKETING_MODEL,
         story,
       );
+
+      if (!generatedStoryData || !generatedStoryData.title || !generatedStoryData.description) {
+        throw new Error('Failed to generate valid YouTube metadata');
+      }
 
       return {
         title: generatedStoryData.title
           .replaceAll('\n', '')
           .replaceAll('"', ''),
         description: generatedStoryData.description,
-        tags: generatedStoryData.tags,
+        tags: generatedStoryData.tags || [],
         thumbnail: thumbnailPath,
       };
     } catch (error) {
       this.logger.error(`Error generating metadata: ${error.message}`);
-      throw error;
+      throw new Error(`Failed to generate YouTube metadata: ${error.message}`);
     }
   }
 

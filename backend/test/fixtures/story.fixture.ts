@@ -4,8 +4,8 @@ export const testTypeData = {
   chapter_prompt: 'Create a test chapter',
   image_prompt: 'Create a test image',
   sound_prompt: 'Create test sound',
-  youtube_channel_id: 'test_channel',
-  youtube_playlist_id: 'test_playlist',
+  youtube_channel_id: 'test_channel_id',
+  youtube_playlist_id: 'test_playlist_id',
 };
 
 export const expectedStoryResponse = {

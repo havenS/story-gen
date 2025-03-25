@@ -1,17 +1,21 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 import { TypesController } from './types.controller';
 import { TypesService } from './types.service';
+import { setupTestApp } from '../../test/utils/setup';
 
 describe('TypesController', () => {
   let controller: TypesController;
+  let app: INestApplication;
+  let typesService: TypesService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [TypesController],
-      providers: [TypesService],
-    }).compile();
+  beforeAll(async () => {
+    app = await setupTestApp();
+    controller = app.get<TypesController>(TypesController);
+    typesService = app.get<TypesService>(TypesService);
+  });
 
-    controller = module.get<TypesController>(TypesController);
+  afterAll(async () => {
+    await app.close();
   });
 
   it('should be defined', () => {

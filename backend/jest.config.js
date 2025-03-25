@@ -4,7 +4,9 @@ module.exports = {
   testEnvironment: 'node',
   testRegex: '(.spec.ts)$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.(t|j)s$': ['ts-jest', {
+      tsconfig: '<rootDir>/tsconfig.json',
+    }],
   },
   setupFiles: ['<rootDir>/test/test.config.ts'],
   moduleNameMapper: {
@@ -18,10 +20,5 @@ module.exports = {
   restoreMocks: true,
   testEnvironmentOptions: {
     url: 'http://localhost:3000',
-  },
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.json',
-    },
   },
 }; 

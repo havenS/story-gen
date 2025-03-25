@@ -2,14 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { setupTestDatabase, teardownTestDatabase } from './test.config';
+import { setupTestDatabase, teardownTestDatabase } from '../test/test.config';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
+  let moduleFixture: TestingModule;
 
   beforeAll(async () => {
     await setupTestDatabase();
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
@@ -18,8 +19,10 @@ describe('AppController (e2e)', () => {
   });
 
   afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
     await teardownTestDatabase();
-    await app.close();
   });
 
   it('/ (GET)', () => {

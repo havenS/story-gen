@@ -24,9 +24,12 @@ export class StoriesService {
     private readonly llmService: LLMService,
     private readonly typesService: TypesService,
     private readonly genApiService: GenApiService,
-  ) {}
+  ) { }
 
   getFolderName(story: Partial<StoryDto>) {
+    if (!story?.name) {
+      return `story_${story?.id || Date.now()}`;
+    }
     return story.name
       .toLowerCase()
       .normalize('NFD')
@@ -179,67 +182,6 @@ export class StoriesService {
     }) as Promise<StoryDto[]>;
   }
 
-  async createStory(types_id: TypeDto['id']): Promise<Partial<StoryDto>> {
-    const types = await this.prisma.types.findUnique({
-      where: { id: types_id },
-    });
-    const existingStories = await this.findAllByType(types_id);
-    const storyInfo = await this.llmService.generateStoryInfo(
-      process.env.OLLAMA_STORY_INFO_MODEL,
-      types.story_prompt,
-      existingStories,
-    );
-    const imagePrompt = await this.llmService.generateStoryImagePrompt(
-      process.env.OLLAMA_STORY_INFO_MODEL,
-      storyInfo.title,
-      storyInfo.synopsis,
-    );
-
-    // First create the story
-    const story = await this.prisma.stories.create({
-      data: {
-        name: storyInfo.title,
-        synopsis: storyInfo.synopsis,
-        image_prompt: imagePrompt,
-        types: {
-          connect: {
-            id: types_id,
-          },
-        },
-      },
-    });
-
-    // Then create the chapters one by one
-    const chapters = [
-      {
-        number: 1,
-        title: storyInfo.chapterOneTitle,
-        summary: storyInfo.chapterOneSummary,
-      },
-      {
-        number: 2,
-        title: storyInfo.chapterTwoTitle,
-        summary: storyInfo.chapterTwoSummary,
-      },
-      {
-        number: 3,
-        title: storyInfo.chapterThreeTitle,
-        summary: storyInfo.chapterThreeSummary,
-      },
-    ];
-
-    for (const chapter of chapters) {
-      await this.prisma.chapters.create({
-        data: {
-          ...chapter,
-          stories_id: story.id,
-        },
-      });
-    }
-
-    return story;
-  }
-
   async create(typeId: number): Promise<StoryDto> {
     const type = await this.prisma.types.findUnique({
       where: { id: typeId },
@@ -252,11 +194,86 @@ export class StoriesService {
     try {
       // Use createStory which handles the story and chapters creation properly
       const story = await this.createStory(typeId);
+      return story;
+    } catch (error) {
+      this.logger.error('Error creating story:', error);
+      throw error;
+    }
+  }
+
+  async createStory(types_id: TypeDto['id']): Promise<StoryDto> {
+    try {
+      const types = await this.prisma.types.findUnique({
+        where: { id: types_id },
+      });
+
+      if (!types) {
+        throw new NotFoundException(`Type with ID ${types_id} not found`);
+      }
+
+      const existingStories = await this.findAllByType(types_id);
+      const storyInfo = await this.llmService.generateStoryInfo(
+        process.env.OLLAMA_STORY_INFO_MODEL,
+        types.story_prompt,
+        existingStories,
+      );
+
+      if (!storyInfo) {
+        throw new Error('Failed to generate story info');
+      }
+
+      const imagePrompt = await this.llmService.generateStoryImagePrompt(
+        process.env.OLLAMA_STORY_INFO_MODEL,
+        storyInfo.title,
+        storyInfo.synopsis,
+      );
+
+      // First create the story
+      const story = await this.prisma.stories.create({
+        data: {
+          name: storyInfo.title,
+          synopsis: storyInfo.synopsis,
+          image_prompt: imagePrompt,
+          types: {
+            connect: {
+              id: types_id,
+            },
+          },
+        },
+      });
+
+      // Then create the chapters one by one
+      const chapters = [
+        {
+          number: 1,
+          title: storyInfo.chapterOneTitle,
+          summary: storyInfo.chapterOneSummary,
+        },
+        {
+          number: 2,
+          title: storyInfo.chapterTwoTitle,
+          summary: storyInfo.chapterTwoSummary,
+        },
+        {
+          number: 3,
+          title: storyInfo.chapterThreeTitle,
+          summary: storyInfo.chapterThreeSummary,
+        },
+      ];
+
+      for (const chapter of chapters) {
+        await this.prisma.chapters.create({
+          data: {
+            ...chapter,
+            stories_id: story.id,
+          },
+        });
+      }
 
       // Return the complete story with chapters
       return this.findOne(story.id);
     } catch (error) {
-      console.error('Error creating story:', error);
+      this.logger.error('Error in createStory:', error);
       throw error;
     }
   }

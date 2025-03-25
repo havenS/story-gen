@@ -1,11 +1,11 @@
-import { Controller, Post, Body, Param, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Put } from '@nestjs/common';
 import { StoriesService } from './stories.service';
 import { StoryDto } from './dto/story.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('stories')
 export class StoriesController {
-  constructor(private readonly storiesService: StoriesService) {}
+  constructor(private readonly storiesService: StoriesService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new story' })
@@ -31,7 +31,7 @@ export class StoriesController {
     return story;
   }
 
-  @Post(':id/generate-content')
+  @Put(':id/generate-content')
   @ApiOperation({ summary: 'Generate content for a story' })
   @ApiResponse({
     status: 200,
@@ -100,9 +100,14 @@ export class StoriesController {
       'The story has been created and all content has been generated.',
     type: StoryDto,
   })
-  async createAndGenerateFullStory(
+  async createAndGenerate(
     @Body('types_id') types_id: number,
   ): Promise<StoryDto> {
-    return this.storiesService.createAndGenerateFullStory(types_id);
+    const story = await this.storiesService.create(types_id);
+    await this.storiesService.generateChapterContent(story.id);
+    await this.storiesService.generateChaptersMedia(story.id);
+    await this.storiesService.generateFullStoryMedia(story.id);
+    await this.storiesService.generateStoryBackgroundImage(story);
+    return this.storiesService.findOne(story.id);
   }
 }

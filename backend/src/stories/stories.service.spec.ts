@@ -1,64 +1,26 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 import { StoriesService } from './stories.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { LLMService } from '../llm/llm.service';
-import { TypesService } from '../types/types.service';
-import { GenApiService } from '../gen_api/gen_api.service';
+import { setupTestApp, cleanupDatabase, createTestType } from '../../test/utils/setup';
+import { StoryDto } from './dto/story.dto';
 
 describe('StoriesService', () => {
   let service: StoriesService;
+  let app: INestApplication;
+  let prismaService: PrismaService;
 
-  const mockPrismaService = {
-    stories: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-    },
-  };
+  beforeAll(async () => {
+    app = await setupTestApp();
+    service = app.get<StoriesService>(StoriesService);
+    prismaService = app.get<PrismaService>(PrismaService);
+  });
 
-  const mockLLMService = {
-    generateStoryInfo: jest.fn(),
-    generateStoryImagePrompt: jest.fn(),
-    generateChapterContent: jest.fn(),
-    generateChapterExceptForShort: jest.fn(),
-    getChapterBackgroundSound: jest.fn(),
-  };
-
-  const mockTypesService = {
-    getImagePrompt: jest.fn(),
-  };
-
-  const mockGenApiService = {
-    generateChapterMedia: jest.fn(),
-    generateStoryMedia: jest.fn(),
-    generateImage: jest.fn(),
-  };
+  afterAll(async () => {
+    await app.close();
+  });
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        StoriesService,
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
-        {
-          provide: LLMService,
-          useValue: mockLLMService,
-        },
-        {
-          provide: TypesService,
-          useValue: mockTypesService,
-        },
-        {
-          provide: GenApiService,
-          useValue: mockGenApiService,
-        },
-      ],
-    }).compile();
-
-    service = module.get<StoriesService>(StoriesService);
+    await cleanupDatabase(prismaService);
   });
 
   it('should be defined', () => {
@@ -67,9 +29,30 @@ describe('StoriesService', () => {
 
   describe('getFolderName', () => {
     it('should return the correct folder name format', () => {
-      const story = { id: 123 };
+      const story: Partial<StoryDto> = {
+        name: 'Test Story Name!',
+      };
       const result = service.getFolderName(story);
-      expect(result).toBe('story_123');
+      expect(result).toBe('test-story-name');
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return a story by id', async () => {
+      // Create a test type first
+      const type = await createTestType(prismaService);
+
+      // Create a test story
+      const story = await prismaService.stories.create({
+        data: {
+          name: 'Test Story',
+          synopsis: 'Test Synopsis',
+          types_id: type.id,
+        },
+      });
+
+      const result = await service.findOne(story.id);
+      expect(result.name).toEqual(story.name);
     });
   });
 });
