@@ -1,10 +1,10 @@
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { TypeDto } from "@/services/api-client";
-import Spinner from "./spinner";
+import Spinner from "../common/spinner";
 
 interface CreateStoryCardProps {
   title: string;
@@ -16,7 +16,7 @@ export function CreateStoryCard({ title, type }: CreateStoryCardProps) {
   const queryClient = useQueryClient();
 
   const createStoryMutation = useMutation({
-    mutationFn: () => api.createAndGenerateFullStory({ data: { types_id: type.id } }),
+    mutationFn: () => api.createAndGenerate({ data: { types_id: type.id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [[`${type.id}-stories`]] });
       alert("Story created and generated successfully!");

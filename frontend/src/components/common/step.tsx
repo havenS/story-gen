@@ -1,4 +1,4 @@
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Circle, ArrowRight } from "lucide-react";
 

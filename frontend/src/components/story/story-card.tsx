@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useStoryMutations } from "@/hooks/use-story-mutations";
-import { Step } from "./step";
-import { CardImage } from "./card-image";
+import { Step } from "../common/step";
+import { CardImage } from "../common/card-image";
 
 interface StoryCardProps {
   story: StoryDto;
