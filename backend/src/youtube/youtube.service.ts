@@ -12,15 +12,24 @@ export class YoutubeService {
   private oauth2Client: OAuth2Client;
   private readonly logger = new Logger(YoutubeService.name);
   private readonly tokenPath = path.join(__dirname, '../../../token.json');
-  private readonly clientSecretPath = path.join(__dirname, '../../../client_secret.json');
+  private readonly clientSecretPath = path.join(
+    __dirname,
+    '../../../client_secret.json',
+  );
 
   constructor(private readonly llmService: LLMService) {
     this.logger.log('Initializing YouTube Service with OAuth2');
-    const credentials = JSON.parse(fs.readFileSync(this.clientSecretPath, 'utf-8'));
+    const credentials = JSON.parse(
+      fs.readFileSync(this.clientSecretPath, 'utf-8'),
+    );
     const { client_id, client_secret, redirect_uris } = credentials.web;
 
     // Initialisation du client OAuth2
-    this.oauth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+    this.oauth2Client = new google.auth.OAuth2(
+      client_id,
+      client_secret,
+      redirect_uris[0],
+    );
 
     // Initialisation du client YouTube
     this.youtubeClient = google.youtube({
@@ -47,7 +56,9 @@ export class YoutubeService {
   private loadToken() {
     if (this.tokenExists()) {
       this.logger.log('Loading existing token');
-      const { access_token } = JSON.parse(fs.readFileSync(this.tokenPath, 'utf-8'));
+      const { access_token } = JSON.parse(
+        fs.readFileSync(this.tokenPath, 'utf-8'),
+      );
       this.oauth2Client.setCredentials({ access_token });
     } else {
       this.logger.warn('No token found, authorize the app first.');
@@ -78,7 +89,12 @@ export class YoutubeService {
     channelId: string,
     playlistId: string,
     videoPath: string,
-    metadata: { title: string; description: string; tags: string[]; thumbnail: string },
+    metadata: {
+      title: string;
+      description: string;
+      tags: string[];
+      thumbnail: string;
+    },
     shortsPath: string[],
   ) {
     try {
@@ -87,7 +103,10 @@ export class YoutubeService {
 
       this.logger.log(`Uploading video: ${metadata.title} - ${videoPath}`);
 
-      const publishHour = parseInt(process.env.YOUTUBE_DEFAULT_PUBLISH_HOUR, 10);
+      const publishHour = parseInt(
+        process.env.YOUTUBE_DEFAULT_PUBLISH_HOUR,
+        10,
+      );
       const publishDate = new Date();
       publishDate.setHours(publishHour, 0, 0);
 
@@ -135,14 +154,21 @@ export class YoutubeService {
             body: fs.createReadStream(metadata.thumbnail),
           },
         });
-        this.logger.log(`Thumbnail uploaded successfully for video ID: ${videoResponse.data.id}`);
+        this.logger.log(
+          `Thumbnail uploaded successfully for video ID: ${videoResponse.data.id}`,
+        );
       }
 
-      await this.uploadShorts(videoResponse.data.id, shortsPath, {
-        title: metadata.title,
-        description: metadata.description,
-        tags: ['short', ...metadata.tags],
-      }, publishHour);
+      await this.uploadShorts(
+        videoResponse.data.id,
+        shortsPath,
+        {
+          title: metadata.title,
+          description: metadata.description,
+          tags: ['short', ...metadata.tags],
+        },
+        publishHour,
+      );
 
       this.logger.log(`Video uploaded successfully: ${videoResponse.data.id}`);
       return videoResponse.data;
@@ -152,14 +178,19 @@ export class YoutubeService {
     }
   }
 
-  async uploadShorts(videoId: string, shortsPaths: string[], metadata: { title: string; description: string; tags: string[] }, publishHour: number) {
+  async uploadShorts(
+    videoId: string,
+    shortsPaths: string[],
+    metadata: { title: string; description: string; tags: string[] },
+    publishHour: number,
+  ) {
     try {
       this.logger.log('Preparing to upload shorts');
 
       // Define scheduled publish times
       const publishIntervals = [0, 0, 0]; // in hours
       // const publishIntervals = [1, 2, 3]; // in hours
-      const publishTimes: Date[] = publishIntervals.map(interval => {
+      const publishTimes: Date[] = publishIntervals.map((interval) => {
         const date = new Date();
         date.setHours(publishHour + interval);
         date.setMinutes(0);
@@ -170,7 +201,9 @@ export class YoutubeService {
       for (let i = 0; i < shortsPaths.length; i++) {
         const shortPath = shortsPaths[i];
         const publishTime = publishTimes[i];
-        this.logger.log(`Uploading short: ${shortPath} scheduled at ${publishTime.toISOString()}`);
+        this.logger.log(
+          `Uploading short: ${shortPath} scheduled at ${publishTime.toISOString()}`,
+        );
 
         const shortResponse = await this.youtubeClient.videos.insert({
           part: ['snippet', 'status'],
@@ -191,7 +224,9 @@ export class YoutubeService {
           },
         });
 
-        this.logger.log(`Short uploaded successfully: ${shortResponse.data.id}`);
+        this.logger.log(
+          `Short uploaded successfully: ${shortResponse.data.id}`,
+        );
 
         // Publish comment on the short
         // try {
@@ -207,20 +242,30 @@ export class YoutubeService {
 
   async generateMetadata(story: Partial<StoryDto>, thumbnailPath: string) {
     try {
+      if (!story.name || !story.synopsis) {
+        throw new Error('Story is missing required fields (name or synopsis)');
+      }
+
       const generatedStoryData = await this.llmService.generateYouTubeMetadata(
         process.env.OLLAMA_MARKETING_MODEL,
         story,
       );
 
+      if (!generatedStoryData || !generatedStoryData.title || !generatedStoryData.description) {
+        throw new Error('Failed to generate valid YouTube metadata');
+      }
+
       return {
-        title: generatedStoryData.title.replaceAll('\n', '').replaceAll('"', ''),
+        title: generatedStoryData.title
+          .replaceAll('\n', '')
+          .replaceAll('"', ''),
         description: generatedStoryData.description,
-        tags: generatedStoryData.tags,
-        thumbnail: thumbnailPath
+        tags: generatedStoryData.tags || [],
+        thumbnail: thumbnailPath,
       };
     } catch (error) {
       this.logger.error(`Error generating metadata: ${error.message}`);
-      throw error;
+      throw new Error(`Failed to generate YouTube metadata: ${error.message}`);
     }
   }
 
@@ -229,7 +274,8 @@ export class YoutubeService {
       access_type: 'offline',
       scope: [
         'https://www.googleapis.com/auth/youtube.upload',
-        'https://www.googleapis.com/auth/youtube.force-ssl'],
+        'https://www.googleapis.com/auth/youtube.force-ssl',
+      ],
     });
     return authUrl;
   }

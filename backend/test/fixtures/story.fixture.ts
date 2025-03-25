@@ -4,8 +4,8 @@ export const testTypeData = {
   chapter_prompt: 'Create a test chapter',
   image_prompt: 'Create a test image',
   sound_prompt: 'Create test sound',
-  youtube_channel_id: 'test_channel',
-  youtube_playlist_id: 'test_playlist'
+  youtube_channel_id: 'test_channel_id',
+  youtube_playlist_id: 'test_playlist_id',
 };
 
 export const expectedStoryResponse = {
@@ -15,19 +15,19 @@ export const expectedStoryResponse = {
     {
       title: 'Chapter 1',
       summary: 'Summary 1',
-      content: 'Content 1'
+      content: 'Content 1',
     },
     {
       title: 'Chapter 2',
       summary: 'Summary 2',
-      content: 'Content 2'
+      content: 'Content 2',
     },
     {
       title: 'Chapter 3',
       summary: 'Summary 3',
-      content: 'Content 3'
-    }
-  ]
+      content: 'Content 3',
+    },
+  ],
 };
 
 export const expectedMediaResponse = {
@@ -37,15 +37,15 @@ export const expectedMediaResponse = {
   chapters: [
     {
       videoUrl: 'https://example.com/chapter1.mp4',
-      audioUrl: 'https://example.com/chapter1.mp3'
+      audioUrl: 'https://example.com/chapter1.mp3',
     },
     {
       videoUrl: 'https://example.com/chapter2.mp4',
-      audioUrl: 'https://example.com/chapter2.mp3'
+      audioUrl: 'https://example.com/chapter2.mp3',
     },
     {
       videoUrl: 'https://example.com/chapter3.mp4',
-      audioUrl: 'https://example.com/chapter3.mp3'
-    }
-  ]
-}; 
+      audioUrl: 'https://example.com/chapter3.mp3',
+    },
+  ],
+};

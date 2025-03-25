@@ -1,7 +1,7 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { ChapterDto } from "src/chapters/dto/chapter.dto";
-import { PublishingDto } from "src/publishing/dto/publishing.dto";
-import { TypeDto } from "src/types/dto/type.dto";
+import { ApiProperty } from '@nestjs/swagger';
+import { ChapterDto } from 'src/chapters/dto/chapter.dto';
+import { PublishingDto } from 'src/publishing/dto/publishing.dto';
+import { TypeDto } from 'src/types/dto/type.dto';
 
 export class StoryDto {
   @ApiProperty({
@@ -18,7 +18,8 @@ export class StoryDto {
 
   @ApiProperty({
     description: 'Synopsis of the story',
-    example: 'A family moves into a haunted house and discovers its dark secrets.',
+    example:
+      'A family moves into a haunted house and discovers its dark secrets.',
   })
   synopsis: string;
 

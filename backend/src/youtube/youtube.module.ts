@@ -9,4 +9,4 @@ import { YoutubeController } from './youtube.controller';
   imports: [LLMModule],
   controllers: [YoutubeController],
 })
-export class YoutubeModule { }
+export class YoutubeModule {}

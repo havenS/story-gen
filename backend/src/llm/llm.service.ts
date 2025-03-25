@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { ChapterDto } from 'src/chapters/dto/chapter.dto';
 import { StoryDto } from 'src/stories/dto/story.dto';
-const fs = require('fs');
+import * as fs from 'fs';
 
 @Injectable()
 export class LLMService {
@@ -13,69 +13,117 @@ export class LLMService {
     return response.data;
   }
 
-  async callLLM(model: string, method: string, json: boolean, temperature?: number, messages?: any[], seed?: number) {
+  async callLLM(
+    model: string,
+    method: string,
+    json: boolean,
+    temperature?: number,
+    messages?: any[],
+    seed?: number,
+  ) {
     try {
-      let data = {
+      const data = {
         model,
         stream: false,
-      }
+      };
 
       if (temperature) {
-        data['temperature'] = temperature
+        data['temperature'] = temperature;
       }
 
       if (seed) {
-        data['seed'] = seed
+        data['seed'] = seed;
       }
 
       if (json) {
-        data['format'] = 'json'
+        data['format'] = 'json';
       }
 
       if (method === 'chat') {
-        data['messages'] = messages
+        data['messages'] = messages;
       } else if (method === 'generate') {
-        data['prompt'] = messages[0].content
+        data['prompt'] = messages[0].content;
       }
 
-      const response = await axios.post(`${process.env.OLLAMA_HOST}/api/${method}`, data, {
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await axios.post(
+        `${process.env.OLLAMA_HOST}/api/${method}`,
+        data,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 360000000,
         },
-        timeout: 360000000,
-      });
+      );
+
+      if (!response.data) {
+        this.logger.error('Empty response from LLM');
+        throw new Error('Empty response from LLM');
+      }
 
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la génération avec Ollama :', error.response ? error.response.data : error.message);
+      this.logger.error(
+        'Error calling LLM:',
+        error.response ? error.response.data : error.message,
+      );
+      throw new Error('Failed to call LLM: ' + (error.response ? error.response.data : error.message));
     }
-  };
+  }
 
   async generateStoryInfo(model, prompt: string, history: StoryDto[]) {
-    this.logger.log('Generating story info with model:', model)
+    this.logger.log('Generating story info with model:', model);
     const firstItem = history.map(({ name }) => name).join(', ');
     const messages = [
-      { role: 'user', content: `${prompt} > "Whispers" is forbidden in the title. You are not allowed to reuse these existing stories' titles or topics: ${firstItem}` },
-    ]
+      {
+        role: 'user',
+        content: `${prompt} > "Whispers" is forbidden in the title. You are not allowed to reuse these existing stories' titles or topics: ${firstItem}. Return a JSON object with the following structure: { "title": "string", "synopsis": "string", "chapterOneTitle": "string", "chapterOneSummary": "string" }`,
+      },
+    ];
 
-    const call = await this.callLLM(model, 'chat', true, 0.2, messages, history.length)
+    const call = await this.callLLM(
+      model,
+      'chat',
+      true,
+      0.2,
+      messages,
+      history.length,
+    );
 
-    fs.writeFileSync('story_info.json', call.message.content);
+    if (!call?.message?.content) {
+      this.logger.error('LLM response is empty');
+      throw new Error('Failed to generate story info');
+    }
 
-    return JSON.parse(call.message.content)
+    try {
+      const storyInfo = JSON.parse(call.message.content);
+      if (!storyInfo.title || !storyInfo.synopsis || !storyInfo.chapterOneTitle || !storyInfo.chapterOneSummary) {
+        this.logger.error('Invalid story info format:', storyInfo);
+        throw new Error('Invalid story info format');
+      }
+      return storyInfo;
+    } catch (error) {
+      this.logger.error('Error parsing story info:', error);
+      throw new Error('Failed to parse story info');
+    }
   }
 
   async generateStoryImagePrompt(model, title: string, synopsis: string) {
     const messages = [
-      { role: 'user', content: `give me a very short, synthetic prompt to use in a text-to-image model like stable diffusion to illustrate the story. Limit to 49 tokens. for a story titled "${title}" with the synopsis being "${synopsis}". Give the prompt, straight, with nothing else.` },
-    ]
-    const call = await this.callLLM(model, 'chat', false, 1, messages)
+      {
+        role: 'user',
+        content: `give me a very short, synthetic prompt to use in a text-to-image model like stable diffusion to illustrate the story. Limit to 49 tokens. for a story titled "${title}" with the synopsis being "${synopsis}". Give the prompt, straight, with nothing else.`,
+      },
+    ];
+    const call = await this.callLLM(model, 'chat', false, 1, messages);
 
     if (call.message.content.split(' ').length > 25) {
-      this.logger.warn(`Prompt too long, ${call.message.content.split(' ').length} tokens, retrying...`)
+      this.logger.warn(
+        `Prompt too long, ${call.message.content.split(' ').length} tokens, retrying...`,
+      );
       return this.generateStoryImagePrompt(model, title, synopsis);
     }
-    return call.message.content
+    return call.message.content;
   }
 
   async generateChapterContent(model, prompt: string, story: StoryDto) {
@@ -88,30 +136,28 @@ export class LLMService {
       '[chapterTwoSummary]': story.chapters[1].summary,
       '[chapterThreeTitle]': story.chapters[2].title,
       '[chapterThreeSummary]': story.chapters[2].summary,
-    }
+    };
 
-    for (var key in placeholders) {
+    for (const key in placeholders) {
       prompt = prompt.replace(key, placeholders[key]);
     }
 
-    const messages = [
-      { role: 'user', content: prompt }
-    ]
+    const messages = [{ role: 'user', content: prompt }];
 
-    const call = await this.callLLM(model, 'chat', false, 0, messages)
+    const call = await this.callLLM(model, 'chat', false, 0, messages);
     const { content } = call.message;
     const regex = /\*\*(.+?)\*\*\s*([\s\S]+?)(?=\*\*|$)/g;
 
-    return Array.from(content.matchAll(regex), match => match[2].trim());
+    return Array.from(content.matchAll(regex), (match) => match[2].trim());
   }
 
   async getChapterBackgroundSound(model, prompt: string, chapter: ChapterDto) {
-    const completedPrompt = prompt.replace('[content]', chapter.summary)
+    const completedPrompt = prompt.replace('[content]', chapter.summary);
 
-    const messages = [{ role: 'user', content: completedPrompt }]
-    const call = await this.callLLM(model, 'chat', true, 1, messages)
+    const messages = [{ role: 'user', content: completedPrompt }];
+    const call = await this.callLLM(model, 'chat', true, 1, messages);
 
-    return JSON.parse(call.message.content)
+    return JSON.parse(call.message.content);
   }
 
   async generateYouTubeMetadata(model, story: Partial<StoryDto>) {
@@ -126,7 +172,11 @@ export class LLMService {
     return { title: youtubeTitle, description, tags };
   }
 
-  private async generateTitle(model, title: string, synopsis: string): Promise<string> {
+  private async generateTitle(
+    model,
+    title: string,
+    synopsis: string,
+  ): Promise<string> {
     const prompt = `Give a title prepend with 2 emojis representing a story titled "${title}". 
 
 Here is the synopsis: "${synopsis}". 
@@ -135,18 +185,23 @@ Here is the synopsis: "${synopsis}".
 2. The title is short and catchy
 
 Important: Give me only the emoji and the title, nothing else, and no " around.`;
-    const messages = [{ role: 'user', content: prompt }]
-    const call = await this.callLLM(model, 'chat', false, 0.8, messages)
+    const messages = [{ role: 'user', content: prompt }];
+    const call = await this.callLLM(model, 'chat', false, 0.8, messages);
     const { content } = call.message;
 
-    const cleanedContent = content.startsWith('"') && content.endsWith('"')
-      ? content.slice(1, -1)
-      : content;
+    const cleanedContent =
+      content.startsWith('"') && content.endsWith('"')
+        ? content.slice(1, -1)
+        : content;
 
     return cleanedContent;
   }
 
-  private async generateDescription(model, title: string, synopsis: string): Promise<string> {
+  private async generateDescription(
+    model,
+    title: string,
+    synopsis: string,
+  ): Promise<string> {
     const prompt = `Write a short YouTube video description for a story titled "${title}". 
 
 Here is the synopsis: "${synopsis}". 
@@ -157,13 +212,14 @@ Each chapter of the story builds suspense. The description should be engaging, p
 2. Call to action for viewers to watch and discover the full story.
 
 Important: Give me only the description, nothing else, and no " around the description.`;
-    const messages = [{ role: 'user', content: prompt }]
-    const call = await this.callLLM(model, 'chat', false, 0.8, messages)
+    const messages = [{ role: 'user', content: prompt }];
+    const call = await this.callLLM(model, 'chat', false, 0.8, messages);
     const { content } = call.message;
 
-    const cleanedContent = content.startsWith('"') && content.endsWith('"')
-      ? content.slice(1, -1)
-      : content;
+    const cleanedContent =
+      content.startsWith('"') && content.endsWith('"')
+        ? content.slice(1, -1)
+        : content;
 
     return cleanedContent;
   }
@@ -182,13 +238,10 @@ Give me only the best tags separated by commas, nothing else.`;
     const messages = [{ role: 'user', content: prompt }];
     const call = await this.callLLM(model, 'chat', false, 0.8, messages);
 
-    return call.message.content.split(',').map(tag => tag.trim());
+    return call.message.content.split(',').map((tag) => tag.trim());
   }
 
-  async generateChapterExceptForShort(
-    model,
-    content: string,
-  ): Promise<string> {
+  async generateChapterExceptForShort(model, content: string): Promise<string> {
     const prompt = `You are a skilled editor and content strategist. Your task is to analyze the provided text and identify three consecutive sentences that are the most engaging, intriguing, or suspenseful. These sentences should spark curiosity and create a strong desire to click and watch the associated video.
 
 Consider the following criteria when selecting the sentences:

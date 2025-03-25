@@ -1,20 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PublishingDto } from './dto/publishing.dto';
-import { Prisma } from '@prisma/client';
 import { CreatePublishingDto } from './dto/createPublishing.dto';
 
 @Injectable()
 export class PublishingService {
   constructor(private prisma: PrismaService) { }
 
-  async findOnePublishing(id: number): Promise<PublishingDto | null> {
-    return this.prisma.publishing.findUnique({
-      where: { id },
+  async findOnePublishing(storyId: number): Promise<PublishingDto | null> {
+    return this.prisma.publishing.findFirst({
+      where: { story_id: storyId },
     });
   }
 
-  async updatePublishing(id: number, data: Partial<Omit<PublishingDto, 'id'>>): Promise<PublishingDto> {
+  async updatePublishing(
+    id: number,
+    data: Partial<Omit<PublishingDto, 'id'>>,
+  ): Promise<PublishingDto> {
     return this.prisma.publishing.update({
       where: { id },
       data,

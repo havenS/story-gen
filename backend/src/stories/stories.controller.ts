@@ -1,7 +1,7 @@
-import { Controller, Post, Body, Param, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Put } from '@nestjs/common';
 import { StoriesService } from './stories.service';
 import { StoryDto } from './dto/story.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('stories')
 export class StoriesController {
@@ -9,57 +9,77 @@ export class StoriesController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new story' })
-  @ApiResponse({ status: 201, description: 'The story has been successfully created.', type: StoryDto })
-  async create(
-    @Body('types_id') types_id: number,
-  ): Promise<StoryDto> {
+  @ApiResponse({
+    status: 201,
+    description: 'The story has been successfully created.',
+    type: StoryDto,
+  })
+  async create(@Body('types_id') types_id: number): Promise<StoryDto> {
     const story = await this.storiesService.create(types_id);
     return story;
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a story by ID' })
-  @ApiResponse({ status: 200, description: 'The story has been successfully retrieved.', type: StoryDto })
-  async findOne(
-    @Param('id') id: string,
-  ): Promise<StoryDto> {
+  @ApiResponse({
+    status: 200,
+    description: 'The story has been successfully retrieved.',
+    type: StoryDto,
+  })
+  async findOne(@Param('id') id: string): Promise<StoryDto> {
     const story = await this.storiesService.findOne(parseInt(id, 10));
     return story;
   }
 
-  @Post(':id/generate-content')
+  @Put(':id/generate-content')
   @ApiOperation({ summary: 'Generate content for a story' })
-  @ApiResponse({ status: 200, description: 'The content has been successfully generated.', type: StoryDto })
-  async generateChapterContent(
-    @Param('id') id: string,
-  ): Promise<StoryDto> {
-    const story = await this.storiesService.generateChapterContent(parseInt(id, 10));
+  @ApiResponse({
+    status: 200,
+    description: 'The content has been successfully generated.',
+    type: StoryDto,
+  })
+  async generateChapterContent(@Param('id') id: string): Promise<StoryDto> {
+    const story = await this.storiesService.generateChapterContent(
+      parseInt(id, 10),
+    );
     return story;
   }
 
   @Post(':id/generate-chapter-media')
   @ApiOperation({ summary: 'Generate chapter media for a story' })
-  @ApiResponse({ status: 200, description: 'The media has been successfully generated.', type: StoryDto })
-  async generateStoryChapterMedia(
-    @Param('id') id: string,
-  ): Promise<StoryDto> {
-    const story = await this.storiesService.generateChaptersMedia(parseInt(id, 10));
+  @ApiResponse({
+    status: 200,
+    description: 'The media has been successfully generated.',
+    type: StoryDto,
+  })
+  async generateStoryChapterMedia(@Param('id') id: string): Promise<StoryDto> {
+    const story = await this.storiesService.generateChaptersMedia(
+      parseInt(id, 10),
+    );
     return story;
   }
 
   @Post(':id/generate-media')
   @ApiOperation({ summary: 'Generate media for a story' })
-  @ApiResponse({ status: 200, description: 'The media has been successfully generated.', type: StoryDto })
-  async generateFullStoryMedia(
-    @Param('id') id: string,
-  ): Promise<StoryDto> {
-    const story = await this.storiesService.generateFullStoryMedia(parseInt(id, 10));
+  @ApiResponse({
+    status: 200,
+    description: 'The media has been successfully generated.',
+    type: StoryDto,
+  })
+  async generateFullStoryMedia(@Param('id') id: string): Promise<StoryDto> {
+    const story = await this.storiesService.generateFullStoryMedia(
+      parseInt(id, 10),
+    );
     return story;
   }
 
   @Post(':id/generate-background-image')
   @ApiOperation({ summary: 'Generate background image for a story' })
-  @ApiResponse({ status: 200, description: 'The background image has been successfully generated.', type: StoryDto })
+  @ApiResponse({
+    status: 200,
+    description: 'The background image has been successfully generated.',
+    type: StoryDto,
+  })
   async generateStoryBackgroundImage(
     @Param('id') id: string,
   ): Promise<StoryDto> {
@@ -71,11 +91,23 @@ export class StoriesController {
   }
 
   @Post('create-and-generate')
-  @ApiOperation({ summary: 'Create a new story and generate all content and media' })
-  @ApiResponse({ status: 201, description: 'The story has been created and all content has been generated.', type: StoryDto })
-  async createAndGenerateFullStory(
+  @ApiOperation({
+    summary: 'Create a new story and generate all content and media',
+  })
+  @ApiResponse({
+    status: 201,
+    description:
+      'The story has been created and all content has been generated.',
+    type: StoryDto,
+  })
+  async createAndGenerate(
     @Body('types_id') types_id: number,
   ): Promise<StoryDto> {
-    return this.storiesService.createAndGenerateFullStory(types_id);
+    const story = await this.storiesService.create(types_id);
+    await this.storiesService.generateChapterContent(story.id);
+    await this.storiesService.generateChaptersMedia(story.id);
+    await this.storiesService.generateFullStoryMedia(story.id);
+    await this.storiesService.generateStoryBackgroundImage(story);
+    return this.storiesService.findOne(story.id);
   }
 }

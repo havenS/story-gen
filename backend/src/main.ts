@@ -16,7 +16,8 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  await OpenApiNestFactory.configure(app,
+  await OpenApiNestFactory.configure(
+    app,
     apiDocBuilder,
     {
       webServerOptions: {
@@ -36,9 +37,11 @@ async function bootstrap() {
         openApiFilePath: './openapi.json',
         skipValidation: true,
       },
-    }, {
-    operationIdFactory: (c: string, method: string) => method,
-  });
+    },
+    {
+      operationIdFactory: (c: string, method: string) => method,
+    },
+  );
 
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.enableCors();

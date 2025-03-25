@@ -10,6 +10,6 @@ import { TypesModule } from 'src/types/types.module';
   controllers: [StoriesController],
   providers: [StoriesService],
   imports: [PrismaModule, LLMModule, GenApiModule, TypesModule],
-  exports: [StoriesService]
+  exports: [StoriesService],
 })
-export class StoriesModule { }
+export class StoriesModule {}

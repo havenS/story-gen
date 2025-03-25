@@ -1,63 +1,56 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
-import { PrismaService } from '../../src/prisma/prisma.service';
 import { LLMService } from '../../src/llm/llm.service';
 import { GenApiService } from '../../src/gen_api/gen_api.service';
 import { TypesService } from '../../src/types/types.service';
 import { YoutubeService } from '../../src/youtube/youtube.service';
-import { mockLLMService, mockGenApiService, createMockTypesService, mockYoutubeService } from '../mocks/services.mock';
+import {
+  MockLLMService,
+  MockGenApiService,
+  MockYoutubeService,
+} from '../mocks/services.mock';
 import { testTypeData } from '../fixtures/story.fixture';
-import { execSync } from 'child_process';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 export interface TestContext {
   app: INestApplication;
-  prismaService: PrismaService;
+  prismaService: any;
   llmService: LLMService;
   genApiService: GenApiService;
   typesService: TypesService;
   youtubeService: YoutubeService;
 }
 
-export async function setupTestApp(): Promise<TestContext> {
-  // Run migrations
-  execSync('npx prisma migrate dev', { stdio: 'inherit' });
+export const setupTestApp = async (): Promise<INestApplication> => {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
   })
     .overrideProvider(LLMService)
-    .useValue(mockLLMService)
+    .useClass(MockLLMService)
     .overrideProvider(GenApiService)
-    .useValue(mockGenApiService)
+    .useClass(MockGenApiService)
     .overrideProvider(YoutubeService)
-    .useValue(mockYoutubeService)
+    .useClass(MockYoutubeService)
     .compile();
 
   const app = moduleFixture.createNestApplication();
-  const prismaService = moduleFixture.get<PrismaService>(PrismaService);
-  const typesService = createMockTypesService(prismaService);
-
   await app.init();
+  await app.listen(0);
 
-  return {
-    app,
-    prismaService,
-    llmService: mockLLMService as unknown as LLMService,
-    genApiService: mockGenApiService as unknown as GenApiService,
-    typesService: typesService as unknown as TypesService,
-    youtubeService: mockYoutubeService as unknown as YoutubeService,
-  };
+  return app;
+};
+
+export async function cleanupDatabase(prismaService: PrismaService) {
+  // Delete in order of dependencies
+  prismaService.publishing.deleteMany()
+  prismaService.chapters.deleteMany()
+  prismaService.stories.deleteMany()
+  prismaService.types.deleteMany()
 }
 
-export async function cleanupDatabase(prisma: PrismaService) {
-  await prisma.publishing.deleteMany();
-  await prisma.chapters.deleteMany();
-  await prisma.stories.deleteMany();
-  await prisma.types.deleteMany();
-}
-
-export async function createTestType(prisma: PrismaService) {
+export async function createTestType(prisma: any) {
   return await prisma.types.create({
-    data: testTypeData
+    data: testTypeData,
   });
-} 
+}

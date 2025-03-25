@@ -15,13 +15,15 @@ export class ChapterDto {
 
   @ApiProperty({
     description: 'Summary of the chapter',
-    example: 'This chapter introduces the main characters and sets the stage for the story.',
+    example:
+      'This chapter introduces the main characters and sets the stage for the story.',
   })
   summary: string;
 
   @ApiProperty({
     description: 'Content of the chapter',
-    example: 'Once upon a time, in a small town called Hill House, there lived a family...',
+    example:
+      'Once upon a time, in a small town called Hill House, there lived a family...',
   })
   content?: string;
 
@@ -42,4 +44,4 @@ export class ChapterDto {
 
   @ApiProperty()
   updated_at?: Date;
-} 
+}

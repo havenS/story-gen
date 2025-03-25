@@ -5,7 +5,11 @@ import { GenApiService } from './gen_api/gen_api.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService, private llmService: LLMService, private genApiService: GenApiService) { }
+  constructor(
+    private readonly appService: AppService,
+    private llmService: LLMService,
+    private genApiService: GenApiService,
+  ) {}
 
   @Get()
   ping(): string {
