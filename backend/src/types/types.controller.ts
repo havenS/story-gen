@@ -1,11 +1,11 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { TypesService } from './types.service';
 import { TypeDto } from './dto/type.dto';
-import { ApiBody, ApiOkResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse } from '@nestjs/swagger';
 
 @Controller('types')
 export class TypesController {
-  constructor(private readonly typesService: TypesService) { }
+  constructor(private readonly typesService: TypesService) {}
 
   @Get()
   @ApiOkResponse({

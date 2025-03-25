@@ -7,10 +7,6 @@ import { GenApiService } from '../gen_api/gen_api.service';
 
 describe('StoriesService', () => {
   let service: StoriesService;
-  let prismaService: PrismaService;
-  let llmService: LLMService;
-  let typesService: TypesService;
-  let genApiService: GenApiService;
 
   const mockPrismaService = {
     stories: {
@@ -63,10 +59,6 @@ describe('StoriesService', () => {
     }).compile();
 
     service = module.get<StoriesService>(StoriesService);
-    prismaService = module.get<PrismaService>(PrismaService);
-    llmService = module.get<LLMService>(LLMService);
-    typesService = module.get<TypesService>(TypesService);
-    genApiService = module.get<GenApiService>(GenApiService);
   });
 
   it('should be defined', () => {

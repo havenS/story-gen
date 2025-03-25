@@ -10,8 +10,6 @@ import { YoutubeService } from '../src/youtube/youtube.service';
 describe('Publishing Flow (e2e)', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
-  let llmService: LLMService;
-  let genApiService: GenApiService;
   let youtubeService: YoutubeService;
 
   beforeAll(async () => {
@@ -28,16 +26,22 @@ describe('Publishing Flow (e2e)', () => {
           chapterTwoTitle: 'Chapter 2',
           chapterTwoSummary: 'Summary 2',
           chapterThreeTitle: 'Chapter 3',
-          chapterThreeSummary: 'Summary 3'
+          chapterThreeSummary: 'Summary 3',
         }),
-        generateStoryImagePrompt: jest.fn().mockResolvedValue('test image prompt'),
-        generateChapterContent: jest.fn().mockResolvedValue(['Content 1', 'Content 2', 'Content 3']),
-        getChapterBackgroundSound: jest.fn().mockResolvedValue({ background_sound: 'test sound' }),
+        generateStoryImagePrompt: jest
+          .fn()
+          .mockResolvedValue('test image prompt'),
+        generateChapterContent: jest
+          .fn()
+          .mockResolvedValue(['Content 1', 'Content 2', 'Content 3']),
+        getChapterBackgroundSound: jest
+          .fn()
+          .mockResolvedValue({ background_sound: 'test sound' }),
         generateYouTubeMetadata: jest.fn().mockResolvedValue({
           title: 'Test YouTube Title',
           description: 'Test YouTube Description',
-          tags: ['tag1', 'tag2']
-        })
+          tags: ['tag1', 'tag2'],
+        }),
       })
       .overrideProvider(GenApiService)
       .useValue({
@@ -59,15 +63,13 @@ describe('Publishing Flow (e2e)', () => {
           title: 'Test YouTube Title',
           description: 'Test YouTube Description',
           tags: ['tag1', 'tag2'],
-          thumbnail: 'test_thumbnail.jpg'
-        })
+          thumbnail: 'test_thumbnail.jpg',
+        }),
       })
       .compile();
 
     app = moduleFixture.createNestApplication();
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
-    llmService = moduleFixture.get<LLMService>(LLMService);
-    genApiService = moduleFixture.get<GenApiService>(GenApiService);
     youtubeService = moduleFixture.get<YoutubeService>(YoutubeService);
 
     await app.init();
@@ -164,7 +166,9 @@ describe('Publishing Flow (e2e)', () => {
         .expect(201);
 
       // 5. Mock YouTube service to throw an error
-      jest.spyOn(youtubeService, 'uploadVideo').mockRejectedValueOnce(new Error('Upload failed'));
+      jest
+        .spyOn(youtubeService, 'uploadVideo')
+        .mockRejectedValueOnce(new Error('Upload failed'));
 
       // 6. Attempt to publish
       await request(app.getHttpServer())
@@ -197,9 +201,24 @@ describe('Publishing Flow (e2e)', () => {
             types_id: type.id,
             chapters: {
               create: [
-                { number: 1, title: 'Chapter 1', summary: 'Summary 1', content: 'Content 1' },
-                { number: 2, title: 'Chapter 2', summary: 'Summary 2', content: 'Content 2' },
-                { number: 3, title: 'Chapter 3', summary: 'Summary 3', content: 'Content 3' },
+                {
+                  number: 1,
+                  title: 'Chapter 1',
+                  summary: 'Summary 1',
+                  content: 'Content 1',
+                },
+                {
+                  number: 2,
+                  title: 'Chapter 2',
+                  summary: 'Summary 2',
+                  content: 'Content 2',
+                },
+                {
+                  number: 3,
+                  title: 'Chapter 3',
+                  summary: 'Summary 3',
+                  content: 'Content 3',
+                },
               ],
             },
           },
@@ -216,7 +235,7 @@ describe('Publishing Flow (e2e)', () => {
             description: 'Test Description',
             tags: ['test'],
             youtube_id: 'test_youtube_id',
-            patreon_published: false
+            patreon_published: false,
           },
         });
 
@@ -229,9 +248,7 @@ describe('Publishing Flow (e2e)', () => {
       });
 
       it('should return 404 if publishing not found', async () => {
-        await request(app.getHttpServer())
-          .get('/publishing/999')
-          .expect(404);
+        await request(app.getHttpServer()).get('/publishing/999').expect(404);
       });
     });
 
@@ -308,4 +325,4 @@ describe('Publishing Flow (e2e)', () => {
       });
     });
   });
-}); 
+});

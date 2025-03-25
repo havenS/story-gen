@@ -27,4 +27,4 @@ export async function teardownTestDatabase() {
     prisma.types.deleteMany(),
   ]);
   await prisma.$disconnect();
-} 
+}

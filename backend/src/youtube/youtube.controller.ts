@@ -3,7 +3,7 @@ import { YoutubeService } from './youtube.service';
 
 @Controller('youtube')
 export class YoutubeController {
-  constructor(private readonly youtubeService: YoutubeService) { }
+  constructor(private readonly youtubeService: YoutubeService) {}
 
   @Get('auth')
   getYoutubeAuthUrl() {

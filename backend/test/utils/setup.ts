@@ -6,7 +6,12 @@ import { LLMService } from '../../src/llm/llm.service';
 import { GenApiService } from '../../src/gen_api/gen_api.service';
 import { TypesService } from '../../src/types/types.service';
 import { YoutubeService } from '../../src/youtube/youtube.service';
-import { mockLLMService, mockGenApiService, createMockTypesService, mockYoutubeService } from '../mocks/services.mock';
+import {
+  mockLLMService,
+  mockGenApiService,
+  createMockTypesService,
+  mockYoutubeService,
+} from '../mocks/services.mock';
 import { testTypeData } from '../fixtures/story.fixture';
 import { execSync } from 'child_process';
 
@@ -58,6 +63,6 @@ export async function cleanupDatabase(prisma: PrismaService) {
 
 export async function createTestType(prisma: PrismaService) {
   return await prisma.types.create({
-    data: testTypeData
+    data: testTypeData,
   });
-} 
+}

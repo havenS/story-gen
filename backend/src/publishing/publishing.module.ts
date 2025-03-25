@@ -11,4 +11,4 @@ import { LLMModule } from 'src/llm/llm.module';
   providers: [PublishingService, YoutubeService],
   imports: [PrismaModule, StoriesModule, LLMModule],
 })
-export class PublishingModule { }
+export class PublishingModule {}

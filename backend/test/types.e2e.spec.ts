@@ -1,6 +1,10 @@
-import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { TestContext, setupTestApp, cleanupDatabase, createTestType } from './utils/setup';
+import {
+  TestContext,
+  setupTestApp,
+  cleanupDatabase,
+  createTestType,
+} from './utils/setup';
 import { testTypeData } from './fixtures/story.fixture';
 
 describe('TypesController (e2e)', () => {
@@ -71,4 +75,4 @@ describe('TypesController (e2e)', () => {
         .expect(404);
     });
   });
-}); 
+});

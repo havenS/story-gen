@@ -2,11 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PublishingService } from './publishing.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PublishingDto } from './dto/publishing.dto';
-import { Prisma } from '@prisma/client';
 
 describe('PublishingService', () => {
   let service: PublishingService;
-  let prismaService: PrismaService;
 
   const mockPrismaService = {
     publishing: {
@@ -29,7 +27,6 @@ describe('PublishingService', () => {
     }).compile();
 
     service = module.get<PublishingService>(PublishingService);
-    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
@@ -105,10 +102,8 @@ describe('PublishingService', () => {
 
   describe('createPublishing', () => {
     it('should create a new publishing', async () => {
-      const createData: Prisma.publishingCreateInput = {
-        story: {
-          connect: { id: 1 },
-        },
+      const createData: Omit<PublishingDto, 'id'> = {
+        story_id: 1,
         title: 'New Story',
         description: 'New Description',
         tags: ['new'],

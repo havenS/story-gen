@@ -1,31 +1,22 @@
 import { Module } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TypesModule } from './types/types.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StoriesModule } from './stories/stories.module';
-import { ChaptersService } from './chapters/chapters.service';
+import { ChaptersModule } from './chapters/chapters.module';
 import { LLMModule } from './llm/llm.module';
-import { GenApiModule } from './gen_api/gen_api.module';
-import { join } from 'path';
-import { PublishingModule } from './publishing/publishing.module';
-import { YoutubeModule } from './youtube/youtube.module';
+import { MediaModule } from './media/media.module';
+import { ConfigurationService } from './config/configuration.service';
 
 @Module({
   imports: [
-    StoriesModule,
-    TypesModule,
     PrismaModule,
+    StoriesModule,
+    ChaptersModule,
     LLMModule,
-    GenApiModule,
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'public'),
-    }),
-    PublishingModule,
-    YoutubeModule,
+    MediaModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ChaptersService],
+  providers: [AppService, ConfigurationService],
 })
-export class AppModule { }
+export class AppModule {}

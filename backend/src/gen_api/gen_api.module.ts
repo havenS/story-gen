@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { GenApiService } from './gen_api.service';
-import { LLMModule } from 'src/llm/llm.module';
+import { MediaModule } from '../media/media.module';
 
 @Module({
+  imports: [MediaModule],
   providers: [GenApiService],
-  imports: [LLMModule],
-  exports: [GenApiService]
+  exports: [GenApiService],
 })
-export class GenApiModule { }
+export class GenApiModule {}

@@ -1,7 +1,15 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { TestContext, setupTestApp, cleanupDatabase, createTestType } from './utils/setup';
-import { expectedStoryResponse, expectedMediaResponse } from './fixtures/story.fixture';
+import {
+  TestContext,
+  setupTestApp,
+  cleanupDatabase,
+  createTestType,
+} from './utils/setup';
+import {
+  expectedStoryResponse,
+  expectedMediaResponse,
+} from './fixtures/story.fixture';
 
 describe('Story Generation Flow (e2e)', () => {
   let context: TestContext;
@@ -53,8 +61,12 @@ describe('Story Generation Flow (e2e)', () => {
     expect(contentResponse.body.chapters).toHaveLength(3);
     contentResponse.body.chapters.forEach((chapter: any, index: number) => {
       expect(chapter.title).toBe(expectedStoryResponse.chapters[index].title);
-      expect(chapter.summary).toBe(expectedStoryResponse.chapters[index].summary);
-      expect(chapter.content).toBe(expectedStoryResponse.chapters[index].content);
+      expect(chapter.summary).toBe(
+        expectedStoryResponse.chapters[index].summary,
+      );
+      expect(chapter.content).toBe(
+        expectedStoryResponse.chapters[index].content,
+      );
     });
 
     // Generate media
@@ -65,11 +77,17 @@ describe('Story Generation Flow (e2e)', () => {
     expect(mediaResponse.body).toBeDefined();
     expect(mediaResponse.body.videoUrl).toBe(expectedMediaResponse.videoUrl);
     expect(mediaResponse.body.audioUrl).toBe(expectedMediaResponse.audioUrl);
-    expect(mediaResponse.body.thumbnailUrl).toBe(expectedMediaResponse.thumbnailUrl);
+    expect(mediaResponse.body.thumbnailUrl).toBe(
+      expectedMediaResponse.thumbnailUrl,
+    );
     expect(mediaResponse.body.chapters).toHaveLength(3);
     mediaResponse.body.chapters.forEach((chapter: any, index: number) => {
-      expect(chapter.videoUrl).toBe(expectedMediaResponse.chapters[index].videoUrl);
-      expect(chapter.audioUrl).toBe(expectedMediaResponse.chapters[index].audioUrl);
+      expect(chapter.videoUrl).toBe(
+        expectedMediaResponse.chapters[index].videoUrl,
+      );
+      expect(chapter.audioUrl).toBe(
+        expectedMediaResponse.chapters[index].audioUrl,
+      );
     });
   });
 
@@ -100,4 +118,4 @@ describe('Story Generation Flow (e2e)', () => {
   //     .post(`/stories/${createResponse.body.id}/generate-media`)
   //     .expect(500);
   // });
-}); 
+});

@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class TypesService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   findAll() {
     return this.prisma.types.findMany();
@@ -11,13 +11,13 @@ export class TypesService {
 
   findOne(id: number) {
     return this.prisma.types.findFirstOrThrow({
-      where: { id }
+      where: { id },
     });
   }
 
   async getTypeStories(id: number) {
     const type = await this.prisma.types.findFirst({
-      where: { id }
+      where: { id },
     });
 
     if (!type) {
@@ -26,13 +26,13 @@ export class TypesService {
 
     return this.prisma.stories.findMany({
       where: { types_id: id },
-      include: { chapters: true, publishings: true }
+      include: { chapters: true, publishings: true },
     });
   }
 
   async getImagePrompt(id: number, synopsis: string) {
     const type = await this.prisma.types.findFirst({
-      where: { id }
+      where: { id },
     });
 
     const promptTemplate = type.image_prompt;

@@ -4,7 +4,6 @@ import { PrismaService } from '../prisma/prisma.service';
 
 describe('TypesService', () => {
   let service: TypesService;
-  let prismaService: PrismaService;
 
   const mockPrismaService = {
     types: {
@@ -24,7 +23,6 @@ describe('TypesService', () => {
     }).compile();
 
     service = module.get<TypesService>(TypesService);
-    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
@@ -43,7 +41,9 @@ describe('TypesService', () => {
       const synopsis = 'A beautiful sunset over mountains';
       const result = await service.getImagePrompt(1, synopsis);
 
-      expect(result).toBe('A beautiful sunset over mountains|Create an image with {synopsis}');
+      expect(result).toBe(
+        'A beautiful sunset over mountains|Create an image with {synopsis}',
+      );
       expect(mockPrismaService.types.findFirst).toHaveBeenCalledWith({
         where: { id: 1 },
       });

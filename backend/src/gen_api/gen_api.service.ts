@@ -1,185 +1,278 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import * as fs from 'fs';
-import { join } from 'path';
 import { ChapterDto } from 'src/chapters/dto/chapter.dto';
-import { LLMService } from 'src/llm/llm.service';
 import { StoryDto } from 'src/stories/dto/story.dto';
-
-const extractAudio = require('ffmpeg-extract-audio')
+import { FileSystemService } from '../media/services/file-system.service';
+import { ImageGenerationService } from '../media/services/image-generation.service';
+import { VideoGenerationService } from '../media/services/video-generation.service';
+import { AudioGenerationService } from '../media/services/audio-generation.service';
+import { ConfigurationService } from '../config/configuration.service';
 
 @Injectable()
 export class GenApiService {
-  constructor(private readonly llmService: LLMService) { }
+  constructor(
+    private readonly fileSystemService: FileSystemService,
+    private readonly imageGenerationService: ImageGenerationService,
+    private readonly videoGenerationService: VideoGenerationService,
+    private readonly audioGenerationService: AudioGenerationService,
+    private readonly configService: ConfigurationService,
+  ) {}
+
   async pingGenApi() {
-    const response = await axios.get(`${process.env.GEN_API_URL}`);
+    const response = await axios.get(`${this.configService.getGenApiUrl()}`);
     return response.data;
   }
 
-  async generateImage(prompt: string, folderName: string, filename: string, width = 1920, height = 1080) {
-    const directoryPath = join(__dirname, '..', '..', '..', 'public', 'generation', folderName);
-    const filePath = join(directoryPath, filename);
+  async generateImage(
+    prompt: string,
+    folderName: string,
+    filename: string,
+    width = 1920,
+    height = 1080,
+  ) {
+    const directoryPath = this.fileSystemService.buildPath(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      this.configService.getPublicDir(),
+      this.configService.getGenerationDir(),
+      folderName,
+    );
+    const filePath = this.fileSystemService.buildPath(directoryPath, filename);
 
-    if (!fs.existsSync(directoryPath)) {
-      fs.mkdirSync(directoryPath, { recursive: true });
-    }
+    await this.fileSystemService.ensureDirectoryExists(directoryPath);
 
-    const response = await axios.post(`${process.env.GEN_API_URL}/generate-image`, {
+    const response = await this.imageGenerationService.generateImage({
       prompt,
       filename,
       width,
-      height
-    }, {
-      responseType: 'arraybuffer',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      height,
     });
-    const buffer = Buffer.from(response.data, 'binary');
-    fs.writeFileSync(filePath, buffer);
-  }
 
-  async generateThumbnail(folderName: string, storyName: string, storyType: string, backgroundImage: string, fileName = 'thumbnail.jpg') {
-    const directoryPath = join(__dirname, '..', '..', '..', 'public', 'generation', folderName);
-    const filePath = join(directoryPath, fileName);
-
-    if (!fs.existsSync(directoryPath)) {
-      fs.mkdirSync(directoryPath, { recursive: true });
+    if (response.success && response.data) {
+      await this.fileSystemService.writeFile(filePath, response.data);
+    } else {
+      throw new Error(response.error || 'Failed to generate image');
     }
-
-    const imagePath = join(directoryPath, '..', backgroundImage);
-    const imageStream = fs.readFileSync(imagePath);
-    const formData = new FormData();
-
-    formData.append('brand', 'The Daily Tale: Dark Chronicles');
-    formData.append('title', storyName);
-    formData.append('type', storyType);
-    formData.append('filename', fileName);
-    formData.append('image', new Blob([imageStream]), backgroundImage);
-
-    const response = await axios.post(`${process.env.GEN_API_URL}/generate-thumbnail  `, formData, {
-      responseType: 'arraybuffer',
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-
-    const buffer = Buffer.from(response.data, 'binary');
-    fs.writeFileSync(filePath, buffer);
   }
 
-  async generateChapterMedia(chapter: ChapterDto, folderName: string): Promise<{ audioFileName: string; videoFileName: string }> {
-    const directoryPath = join(__dirname, '..', '..', '..', 'public', 'generation', folderName);
+  async generateThumbnail(
+    folderName: string,
+    storyName: string,
+    storyType: string,
+    backgroundImage: string,
+    fileName = 'thumbnail.jpg',
+  ) {
+    const directoryPath = this.fileSystemService.buildPath(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      this.configService.getPublicDir(),
+      this.configService.getGenerationDir(),
+      folderName,
+    );
+    const filePath = this.fileSystemService.buildPath(directoryPath, fileName);
+    const imagePath = this.fileSystemService.buildPath(
+      directoryPath,
+      '..',
+      backgroundImage,
+    );
+
+    await this.fileSystemService.ensureDirectoryExists(directoryPath);
+
+    const imageStream = await this.fileSystemService.readFile(imagePath);
+    const response = await this.imageGenerationService.generateThumbnail({
+      brand: 'The Daily Tale: Dark Chronicles',
+      title: storyName,
+      type: storyType,
+      filename: fileName,
+      image: new Blob([imageStream]),
+    });
+
+    if (response.success && response.data) {
+      await this.fileSystemService.writeFile(filePath, response.data);
+    } else {
+      throw new Error(response.error || 'Failed to generate thumbnail');
+    }
+  }
+
+  async generateChapterMedia(
+    chapter: ChapterDto,
+    folderName: string,
+  ): Promise<{ audioFileName: string; videoFileName: string }> {
+    const directoryPath = this.fileSystemService.buildPath(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      this.configService.getPublicDir(),
+      this.configService.getGenerationDir(),
+      folderName,
+    );
     const fileName = `chapter_${chapter.number}`;
+    const videoFileName = fileName + '.mp4';
+    const videoPath = this.fileSystemService.buildPath(
+      directoryPath,
+      videoFileName,
+    );
+    const audioFileName = fileName + '.mp3';
+    const audioPath = this.fileSystemService.buildPath(
+      directoryPath,
+      audioFileName,
+    );
 
-    if (!fs.existsSync(directoryPath)) {
-      fs.mkdirSync(directoryPath, { recursive: true });
-    }
+    await this.fileSystemService.ensureDirectoryExists(directoryPath);
 
     const backgroundImageFileName = 'background-image.jpg';
-    const backgroundImagePath = join(directoryPath, backgroundImageFileName);
-    const backgroundImageStream = fs.readFileSync(backgroundImagePath);
-    const videoFileName = fileName + '.mp4';
-    const videoPath = join(directoryPath, videoFileName);
-    const audioFileName = fileName + '.mp3';
-    const audioPath = join(directoryPath, audioFileName);
+    const backgroundImagePath = this.fileSystemService.buildPath(
+      directoryPath,
+      backgroundImageFileName,
+    );
+    const backgroundImageStream =
+      await this.fileSystemService.readFile(backgroundImagePath);
 
-    const formData = new FormData();
-    formData.append('title', 'Chapter ' + chapter.number);
-    formData.append('chapter', chapter.title);
-    formData.append('content', chapter.content);
-    formData.append('filename', videoFileName);
-    formData.append('background_sound', chapter.background_sound);
-    formData.append('background_image', new Blob([backgroundImageStream]), 'background_image.jpg');
+    const response = await this.videoGenerationService.generateChapterVideo(
+      chapter,
+      backgroundImageStream,
+    );
 
-    const response = await axios.post(`${process.env.GEN_API_URL}/generate-chapter`, formData, {
-      responseType: 'arraybuffer',
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-
-    const buffer = Buffer.from(response.data, 'binary');
-    fs.writeFileSync(videoPath, buffer);
-
-    await extractAudio({
-      input: videoPath,
-      output: audioPath
-    })
-
-    return { audioFileName, videoFileName };
+    if (response.success && response.data) {
+      await this.fileSystemService.writeFile(videoPath, response.data);
+      await this.audioGenerationService.extractAudioFromVideo(
+        videoPath,
+        audioPath,
+      );
+      return { audioFileName, videoFileName };
+    } else {
+      throw new Error(response.error || 'Failed to generate chapter media');
+    }
   }
 
-  async generateStoryMedia(story: StoryDto, folderName: string, backgroundImage: string): Promise<{ audioFileName: string; videoFileName: string; thumbnailFileName: string }> {
-    const directoryPath = join(__dirname, '..', '..', '..', 'public', 'generation', folderName);
+  async generateStoryMedia(
+    story: StoryDto,
+    folderName: string,
+    backgroundImage: string,
+  ): Promise<{
+    audioFileName: string;
+    videoFileName: string;
+    thumbnailFileName: string;
+  }> {
+    const directoryPath = this.fileSystemService.buildPath(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      this.configService.getPublicDir(),
+      this.configService.getGenerationDir(),
+      folderName,
+    );
     const fileName = 'full_story';
-
-    if (!fs.existsSync(directoryPath)) {
-      fs.mkdirSync(directoryPath, { recursive: true });
-    }
-
-    const chapter1Path = join(directoryPath, 'chapter_1.mp4');
-    const chapter1Stream = fs.readFileSync(chapter1Path);
-    const chapter2Path = join(directoryPath, 'chapter_2.mp4');
-    const chapter2Stream = fs.readFileSync(chapter2Path);
-    const chapter3Path = join(directoryPath, 'chapter_3.mp4');
-    const chapter3Stream = fs.readFileSync(chapter3Path);
-
     const videoFileName = fileName + '.mp4';
-    const videoPath = join(directoryPath, videoFileName);
+    const videoPath = this.fileSystemService.buildPath(
+      directoryPath,
+      videoFileName,
+    );
     const audioFileName = fileName + '.mp3';
-    const audioPath = join(directoryPath, audioFileName);
+    const audioPath = this.fileSystemService.buildPath(
+      directoryPath,
+      audioFileName,
+    );
     const thumbnailFileName = 'thumbnail.jpg';
 
-    const formData = new FormData();
-    formData.append('title', story.name);
-    formData.append('filename', videoFileName);
-    formData.append('type', story.types.name);
-    formData.append('chapter_1', new Blob([chapter1Stream]), 'chapter_1.mp4');
-    formData.append('chapter_2', new Blob([chapter2Stream]), 'chapter_2.mp4');
-    formData.append('chapter_3', new Blob([chapter3Stream]), 'chapter_3.mp4');
+    await this.fileSystemService.ensureDirectoryExists(directoryPath);
 
-    const response = await axios.post(`${process.env.GEN_API_URL}/generate-full-story`, formData, {
-      responseType: 'arraybuffer',
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const chapter1Path = this.fileSystemService.buildPath(
+      directoryPath,
+      'chapter_1.mp4',
+    );
+    const chapter2Path = this.fileSystemService.buildPath(
+      directoryPath,
+      'chapter_2.mp4',
+    );
+    const chapter3Path = this.fileSystemService.buildPath(
+      directoryPath,
+      'chapter_3.mp4',
+    );
 
-    const buffer = Buffer.from(response.data, 'binary');
-    fs.writeFileSync(videoPath, buffer);
+    const chapter1Stream = await this.fileSystemService.readFile(chapter1Path);
+    const chapter2Stream = await this.fileSystemService.readFile(chapter2Path);
+    const chapter3Stream = await this.fileSystemService.readFile(chapter3Path);
 
-    await extractAudio({
-      input: videoPath,
-      output: audioPath
-    })
+    const response = await this.videoGenerationService.generateStoryVideo(
+      story,
+      [chapter1Stream, chapter2Stream, chapter3Stream],
+    );
 
-    await this.generateThumbnail(folderName, story.name, story.types.name, backgroundImage, thumbnailFileName);
+    if (response.success && response.data) {
+      await this.fileSystemService.writeFile(videoPath, response.data);
+      await this.audioGenerationService.extractAudioFromVideo(
+        videoPath,
+        audioPath,
+      );
+      await this.generateThumbnail(
+        folderName,
+        story.name,
+        story.types.name,
+        backgroundImage,
+        thumbnailFileName,
+      );
 
-    for (const chapter of story.chapters) {
-      await this.generateStoryShortMedia(chapter, folderName, backgroundImage);
+      for (const chapter of story.chapters) {
+        await this.generateStoryShortMedia(
+          chapter,
+          folderName,
+          backgroundImage,
+        );
+      }
+
+      return { audioFileName, videoFileName, thumbnailFileName };
+    } else {
+      throw new Error(response.error || 'Failed to generate story media');
     }
-
-    return { audioFileName, videoFileName, thumbnailFileName };
   }
 
-  async generateStoryShortMedia(chapter: ChapterDto, folderName: string, backgroundImage: string): Promise<{ videoFileName: string }> {
-    const directoryPath = join(__dirname, '..', '..', '..', 'public', 'generation', folderName);
+  async generateStoryShortMedia(
+    chapter: ChapterDto,
+    folderName: string,
+    backgroundImage: string,
+  ): Promise<{ videoFileName: string }> {
+    const directoryPath = this.fileSystemService.buildPath(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      this.configService.getPublicDir(),
+      this.configService.getGenerationDir(),
+      folderName,
+    );
     const videoFileName = `short_${chapter.number}.mp4`;
-    const videoPath = join(directoryPath, videoFileName);
-    const backgroundImagePath = join(directoryPath, '..', backgroundImage);
-    const backgroundImageStream = fs.readFileSync(backgroundImagePath);
+    const videoPath = this.fileSystemService.buildPath(
+      directoryPath,
+      videoFileName,
+    );
+    const backgroundImagePath = this.fileSystemService.buildPath(
+      directoryPath,
+      '..',
+      backgroundImage,
+    );
 
-    const shortContentText = await this.llmService.generateChapterExceptForShort(process.env.OLLAMA_STORY_INFO_MODEL, chapter.content);
+    await this.fileSystemService.ensureDirectoryExists(directoryPath);
 
-    const formData = new FormData();
-    formData.append('background_image', new Blob([backgroundImageStream]), backgroundImage);
-    formData.append('filename', videoFileName);
-    formData.append('text', shortContentText);
-    formData.append('type', 'Horror');
+    const backgroundImageStream =
+      await this.fileSystemService.readFile(backgroundImagePath);
 
-    const response = await axios.post(`${process.env.GEN_API_URL}/generate-short`, formData, {
-      responseType: 'arraybuffer',
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await this.videoGenerationService.generateShortVideo(
+      chapter,
+      backgroundImageStream,
+    );
 
-    const buffer = Buffer.from(response.data, 'binary');
-    fs.writeFileSync(videoPath, buffer);
-
-    return { videoFileName };
+    if (response.success && response.data) {
+      await this.fileSystemService.writeFile(videoPath, response.data);
+      return { videoFileName };
+    } else {
+      throw new Error(response.error || 'Failed to generate story short media');
+    }
   }
 }

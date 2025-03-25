@@ -9,9 +9,6 @@ import { TypeDto } from '../types/dto/type.dto';
 
 describe('PublishingController', () => {
   let controller: PublishingController;
-  let publishingService: PublishingService;
-  let storiesService: StoriesService;
-  let youtubeService: YoutubeService;
 
   const mockPublishingService = {
     findOnePublishing: jest.fn(),
@@ -47,9 +44,6 @@ describe('PublishingController', () => {
     }).compile();
 
     controller = module.get<PublishingController>(PublishingController);
-    publishingService = module.get<PublishingService>(PublishingService);
-    storiesService = module.get<StoriesService>(StoriesService);
-    youtubeService = module.get<YoutubeService>(YoutubeService);
   });
 
   it('should be defined', () => {
@@ -69,7 +63,9 @@ describe('PublishingController', () => {
         patreon_published: false,
       };
 
-      mockPublishingService.findOnePublishing.mockResolvedValue(expectedPublishing);
+      mockPublishingService.findOnePublishing.mockResolvedValue(
+        expectedPublishing,
+      );
 
       const result = await controller.getPublishing(storyId);
 
@@ -114,7 +110,10 @@ describe('PublishingController', () => {
       mockPublishingService.findOnePublishing.mockResolvedValue(mockPublishing);
       mockStoriesService.getFolderName.mockReturnValue('test-story');
       mockYoutubeService.uploadVideo.mockResolvedValue(mockYoutubeResponse);
-      mockPublishingService.updatePublishing.mockResolvedValue({ ...mockPublishing, youtube_id: mockYoutubeResponse.id });
+      mockPublishingService.updatePublishing.mockResolvedValue({
+        ...mockPublishing,
+        youtube_id: mockYoutubeResponse.id,
+      });
 
       const result = await controller.publishYoutube(storyId);
 
@@ -132,9 +131,11 @@ describe('PublishingController', () => {
           tags: mockPublishing.tags,
           thumbnail: mockStory.thumbnail_url,
         },
-        expect.any(Array)
+        expect.any(Array),
       );
-      expect(mockPublishingService.updatePublishing).toHaveBeenCalledWith(1, { youtube_id: mockYoutubeResponse.id });
+      expect(mockPublishingService.updatePublishing).toHaveBeenCalledWith(1, {
+        youtube_id: mockYoutubeResponse.id,
+      });
     });
   });
 });
