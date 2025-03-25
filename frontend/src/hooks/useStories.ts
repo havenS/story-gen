@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
-import { TypeDto, StoryDto, StoriesByPublishStatus } from '../types/story';
 import { api } from '../services/api';
 import { AxiosResponse } from 'axios';
+import { StoryDto, TypeDto } from '@/services/api-client';
+
+interface StoriesByPublishStatus {
+  published: StoryDto[];
+  unpublished: StoryDto[];
+}
 
 export const useStories = (isBackendHealthy: boolean) => {
   const [types, setTypes] = useState<TypeDto[]>([]);
