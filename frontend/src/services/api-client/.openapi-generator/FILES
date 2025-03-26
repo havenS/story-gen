@@ -3,7 +3,6 @@
 api.ts
 base.ts
 clients/default-api.ts
-clients/stories-api.ts
 common.ts
 configuration.ts
 git_push.sh

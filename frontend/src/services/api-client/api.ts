@@ -15,5 +15,4 @@
 
 
 export * from './clients/default-api';
-export * from './clients/stories-api';
 

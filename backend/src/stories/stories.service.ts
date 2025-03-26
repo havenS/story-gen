@@ -90,7 +90,7 @@ export class StoriesService {
       this.logger.debug(`Processing chapter ${chapter.number}...`);
       const { background_sound } =
         await this.llmService.getChapterBackgroundSound(
-          process.env.OLLAMA_STORY_BACKGROUND_SOUND_MODEL,
+          process.env.OLLAMA_CHAPTER_BACKGROUND_SOUND_MODEL,
           story.types.sound_prompt,
           chapter,
         );

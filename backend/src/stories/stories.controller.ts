@@ -5,7 +5,6 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { Logger } from '@nestjs/common';
 
-@ApiTags('stories')
 @Controller('stories')
 export class StoriesController {
   private readonly logger = new Logger(StoriesController.name);
@@ -41,13 +40,13 @@ export class StoriesController {
   }
 
   @Put(':id/generate-content')
-  @ApiOperation({ summary: 'Generate content for a story' })
+  @ApiOperation({ summary: 'Generate chapters content for a story' })
   @ApiResponse({
     status: 200,
     description: 'The content has been successfully generated.',
     type: StoryDto,
   })
-  async generateContent(@Param('id') id: string): Promise<StoryDto> {
+  async generateChaptersContent(@Param('id') id: string): Promise<StoryDto> {
     this.logger.log(`Generating content for story with ID: ${id}...`);
     const story = await this.storiesService.generateChaptersContent(parseInt(id, 10));
     this.logger.log(`Successfully generated content for story with ID: ${id}`);
