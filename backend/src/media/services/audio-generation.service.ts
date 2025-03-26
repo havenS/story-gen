@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { extractAudio } from 'ffmpeg-extract-audio';
+import * as extractAudio from 'ffmpeg-extract-audio';
 
 @Injectable()
 export class AudioGenerationService {
