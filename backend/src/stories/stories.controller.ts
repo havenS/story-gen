@@ -113,14 +113,14 @@ export class StoriesController {
   ): Promise<StoryDto> {
     this.logger.log(`Starting create-and-generate process for type ID: ${types_id}...`);
     const story = await this.storiesService.createStory(types_id);
-    this.logger.log(`Created story with ID: ${story.id}, generating content...`);
+    this.logger.log(`Created story with ID: ${story.id}, generating background image...`);
+    await this.storiesService.generateStoryBackgroundImage(story);
+    this.logger.log(`Generated background image, generating content...`);
     await this.storiesService.generateChaptersContent(story.id);
     this.logger.log(`Generated content, generating chapters media...`);
     await this.storiesService.generateChaptersMedia(story.id);
     this.logger.log(`Generated chapters media, generating full story media...`);
     await this.storiesService.generateFullStoryMedia(story.id);
-    this.logger.log(`Generated full story media, generating background image...`);
-    await this.storiesService.generateStoryBackgroundImage(story);
     this.logger.log(`Successfully completed create-and-generate process for story ID: ${story.id}`);
     return this.storiesService.findOne(story.id);
   }
