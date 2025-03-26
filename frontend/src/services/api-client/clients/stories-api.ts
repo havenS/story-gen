@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { CreateStoryDto } from '../models';
+// @ts-ignore
 import type { StoryDto } from '../models';
 /**
  * StoriesApi - axios parameter creator
@@ -32,11 +34,47 @@ export const StoriesApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * 
          * @summary Create a new story
+         * @param {CreateStoryDto} createStoryDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        create: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        create: async (createStoryDto: CreateStoryDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createStoryDto' is not null or undefined
+            assertParamExists('create', 'createStoryDto', createStoryDto)
             const localVarPath = `/stories`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createStoryDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create a new story and generate all content and media
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createAndGenerate: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/stories/create-and-generate`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -95,14 +133,82 @@ export const StoriesApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @summary Generate content for a story
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        generateContent: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('generateContent', 'id', id)
+            const localVarPath = `/stories/{id}/generate-content`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Generate media for a story
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        generateFullStoryMedia: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('generateFullStoryMedia', 'id', id)
+            const localVarPath = `/stories/{id}/generate-media`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Generate background image for a story
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        generateBackgroundImage: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        generateStoryBackgroundImage: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
-            assertParamExists('generateBackgroundImage', 'id', id)
+            assertParamExists('generateStoryBackgroundImage', 'id', id)
             const localVarPath = `/stories/{id}/generate-background-image`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -129,49 +235,15 @@ export const StoriesApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @summary Generate content for a story
+         * @summary Generate chapter media for a story
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        generateContent: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        generateStoryChapterMedia: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
-            assertParamExists('generateContent', 'id', id)
-            const localVarPath = `/stories/{id}/generate-content`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Generate media for a story
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        generateMedia: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('generateMedia', 'id', id)
-            const localVarPath = `/stories/{id}/generate-media`
+            assertParamExists('generateStoryChapterMedia', 'id', id)
+            const localVarPath = `/stories/{id}/generate-chapter-media`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -208,13 +280,26 @@ export const StoriesApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Create a new story
+         * @param {CreateStoryDto} createStoryDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async create(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.create(options);
+        async create(createStoryDto: CreateStoryDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.create(createStoryDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['StoriesApi.create']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create a new story and generate all content and media
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async createAndGenerate(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createAndGenerate(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoriesApi.createAndGenerate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -228,19 +313,6 @@ export const StoriesApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.findOne(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['StoriesApi.findOne']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Generate background image for a story
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async generateBackgroundImage(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.generateBackgroundImage(id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['StoriesApi.generateBackgroundImage']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -263,10 +335,36 @@ export const StoriesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async generateMedia(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.generateMedia(id, options);
+        async generateFullStoryMedia(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.generateFullStoryMedia(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['StoriesApi.generateMedia']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['StoriesApi.generateFullStoryMedia']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Generate background image for a story
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async generateStoryBackgroundImage(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.generateStoryBackgroundImage(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoriesApi.generateStoryBackgroundImage']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Generate chapter media for a story
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async generateStoryChapterMedia(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.generateStoryChapterMedia(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StoriesApi.generateStoryChapterMedia']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -282,11 +380,21 @@ export const StoriesApiFactory = function (configuration?: Configuration, basePa
         /**
          * 
          * @summary Create a new story
+         * @param {CreateStoryDto} createStoryDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        create(options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
-            return localVarFp.create(options).then((request) => request(axios, basePath));
+        create(createStoryDto: CreateStoryDto, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
+            return localVarFp.create(createStoryDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create a new story and generate all content and media
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createAndGenerate(options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
+            return localVarFp.createAndGenerate(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -297,16 +405,6 @@ export const StoriesApiFactory = function (configuration?: Configuration, basePa
          */
         findOne(id: string, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
             return localVarFp.findOne(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Generate background image for a story
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        generateBackgroundImage(id: string, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
-            return localVarFp.generateBackgroundImage(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -325,8 +423,28 @@ export const StoriesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        generateMedia(id: string, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
-            return localVarFp.generateMedia(id, options).then((request) => request(axios, basePath));
+        generateFullStoryMedia(id: string, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
+            return localVarFp.generateFullStoryMedia(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Generate background image for a story
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        generateStoryBackgroundImage(id: string, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
+            return localVarFp.generateStoryBackgroundImage(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Generate chapter media for a story
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        generateStoryChapterMedia(id: string, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
+            return localVarFp.generateStoryChapterMedia(id, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -341,12 +459,24 @@ export class StoriesApi extends BaseAPI {
     /**
      * 
      * @summary Create a new story
+     * @param {CreateStoryDto} createStoryDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof StoriesApi
      */
-    public create(options?: RawAxiosRequestConfig) {
-        return StoriesApiFp(this.configuration).create(options).then((request) => request(this.axios, this.basePath));
+    public create(createStoryDto: CreateStoryDto, options?: RawAxiosRequestConfig) {
+        return StoriesApiFp(this.configuration).create(createStoryDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create a new story and generate all content and media
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof StoriesApi
+     */
+    public createAndGenerate(options?: RawAxiosRequestConfig) {
+        return StoriesApiFp(this.configuration).createAndGenerate(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -359,18 +489,6 @@ export class StoriesApi extends BaseAPI {
      */
     public findOne(id: string, options?: RawAxiosRequestConfig) {
         return StoriesApiFp(this.configuration).findOne(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Generate background image for a story
-     * @param {string} id 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof StoriesApi
-     */
-    public generateBackgroundImage(id: string, options?: RawAxiosRequestConfig) {
-        return StoriesApiFp(this.configuration).generateBackgroundImage(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -393,8 +511,32 @@ export class StoriesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof StoriesApi
      */
-    public generateMedia(id: string, options?: RawAxiosRequestConfig) {
-        return StoriesApiFp(this.configuration).generateMedia(id, options).then((request) => request(this.axios, this.basePath));
+    public generateFullStoryMedia(id: string, options?: RawAxiosRequestConfig) {
+        return StoriesApiFp(this.configuration).generateFullStoryMedia(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Generate background image for a story
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof StoriesApi
+     */
+    public generateStoryBackgroundImage(id: string, options?: RawAxiosRequestConfig) {
+        return StoriesApiFp(this.configuration).generateStoryBackgroundImage(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Generate chapter media for a story
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof StoriesApi
+     */
+    public generateStoryChapterMedia(id: string, options?: RawAxiosRequestConfig) {
+        return StoriesApiFp(this.configuration).generateStoryChapterMedia(id, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

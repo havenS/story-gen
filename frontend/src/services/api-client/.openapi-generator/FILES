@@ -8,6 +8,7 @@ configuration.ts
 git_push.sh
 index.ts
 models/chapter-dto.ts
+models/create-story-dto.ts
 models/index.ts
 models/publishing-dto.ts
 models/story-dto.ts

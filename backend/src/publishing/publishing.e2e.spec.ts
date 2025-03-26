@@ -5,16 +5,19 @@ import { youtube_v3 } from 'googleapis';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { YoutubeService } from 'src/youtube/youtube.service';
 import { cleanupDatabase, createTestType, setupTestApp } from '../../test/utils/setup';
+import { LLMService } from 'src/llm/llm.service';
 
 describe('Publishing Flow (e2e)', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
   let youtubeService: YoutubeService;
+  let llmService: LLMService;
 
   beforeEach(async () => {
     app = await setupTestApp();
     prismaService = app.get<PrismaService>(PrismaService);
     youtubeService = app.get<YoutubeService>(YoutubeService);
+    llmService = app.get<LLMService>(LLMService);
     await cleanupDatabase(prismaService);
   });
 
@@ -25,6 +28,14 @@ describe('Publishing Flow (e2e)', () => {
   describe('Complete Publishing Flow', () => {
     it('should create a story, generate content, and publish to YouTube', async () => {
       jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      const mockChapterContent = [
+        'Chapter 1 content '.repeat(200),  // ~400 words
+        'Chapter 2 content '.repeat(200),  // ~400 words
+        'Chapter 3 content '.repeat(200),  // ~400 words
+      ];
+
+      jest.spyOn(llmService, 'generateChapterContent').mockResolvedValue(mockChapterContent);
+
 
       // Create a test type
       const testType = await createTestType(prismaService);

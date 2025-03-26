@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { CreateStoryDto } from '../models';
+// @ts-ignore
 import type { PublishingDto } from '../models';
 // @ts-ignore
 import type { StoryDto } from '../models';
@@ -36,10 +38,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * 
          * @summary Create a new story
+         * @param {CreateStoryDto} createStoryDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        create: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        create: async (createStoryDto: CreateStoryDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createStoryDto' is not null or undefined
+            assertParamExists('create', 'createStoryDto', createStoryDto)
             const localVarPath = `/stories`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -54,9 +59,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createStoryDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -224,14 +232,14 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @summary Generate content for a story
+         * @summary Generate chapters content for a story
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        generateChapterContent: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        generateChaptersContent: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
-            assertParamExists('generateChapterContent', 'id', id)
+            assertParamExists('generateChaptersContent', 'id', id)
             const localVarPath = `/stories/{id}/generate-content`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -618,11 +626,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary Create a new story
+         * @param {CreateStoryDto} createStoryDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async create(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.create(options);
+        async create(createStoryDto: CreateStoryDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.create(createStoryDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.create']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -689,15 +698,15 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Generate content for a story
+         * @summary Generate chapters content for a story
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async generateChapterContent(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.generateChapterContent(id, options);
+        async generateChaptersContent(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.generateChaptersContent(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.generateChapterContent']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.generateChaptersContent']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -843,11 +852,12 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         /**
          * 
          * @summary Create a new story
+         * @param {CreateStoryDto} createStoryDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        create(options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
-            return localVarFp.create(options).then((request) => request(axios, basePath));
+        create(createStoryDto: CreateStoryDto, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
+            return localVarFp.create(createStoryDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -896,13 +906,13 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @summary Generate content for a story
+         * @summary Generate chapters content for a story
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        generateChapterContent(id: string, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
-            return localVarFp.generateChapterContent(id, options).then((request) => request(axios, basePath));
+        generateChaptersContent(id: string, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
+            return localVarFp.generateChaptersContent(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1014,12 +1024,13 @@ export class DefaultApi extends BaseAPI {
     /**
      * 
      * @summary Create a new story
+     * @param {CreateStoryDto} createStoryDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public create(options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).create(options).then((request) => request(this.axios, this.basePath));
+    public create(createStoryDto: CreateStoryDto, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).create(createStoryDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1079,14 +1090,14 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @summary Generate content for a story
+     * @summary Generate chapters content for a story
      * @param {string} id 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public generateChapterContent(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).generateChapterContent(id, options).then((request) => request(this.axios, this.basePath));
+    public generateChaptersContent(id: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).generateChaptersContent(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

@@ -16,7 +16,7 @@ export function useStoryMutations(storyId: number, typesId: number) {
   });
 
   const generateChaptersContentMutation = useMutation({
-    mutationFn: () => api.generateChapterContent(String(storyId)),
+    mutationFn: () => api.generateChaptersContent(String(storyId)),
     onSuccess: invalidateQueries,
   });
 

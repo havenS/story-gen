@@ -56,6 +56,14 @@ describe('Story Generation (e2e)', () => {
           types_id: testType.id,
         },
       });
+      const mockChapterContent = [
+        'Chapter 1 content '.repeat(200),  // ~400 words
+        'Chapter 2 content '.repeat(200),  // ~400 words
+        'Chapter 3 content '.repeat(200),  // ~400 words
+      ];
+
+      jest.spyOn(llmService, 'generateChapterContent').mockResolvedValue(mockChapterContent);
+
 
       const response = await request(app.getHttpServer())
         .put(`/stories/${story.id}/generate-content`)
