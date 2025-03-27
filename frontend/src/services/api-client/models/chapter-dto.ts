@@ -51,6 +51,18 @@ export interface ChapterDto {
      */
     'content'?: string;
     /**
+     * Audio URL of the chapter
+     * @type {string}
+     * @memberof ChapterDto
+     */
+    'audio_url'?: string;
+    /**
+     * Video URL of the chapter
+     * @type {string}
+     * @memberof ChapterDto
+     */
+    'video_url'?: string;
+    /**
      * Background sound for the chapter
      * @type {string}
      * @memberof ChapterDto

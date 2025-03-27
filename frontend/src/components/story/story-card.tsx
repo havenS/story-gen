@@ -61,7 +61,7 @@ function CreateStoryCard({ story }: StoryCardProps) {
         />
         <Step
           title="Generate chapters media"
-          done={story.chapters.every((chapter) => chapter.audio_url !== null)}
+          done={story.chapters.length > 0 && story.chapters.every((chapter) => chapter!.audio_url !== null)}
           canProceed={!generateChaptersMediaMutation.isPending}
           callMethod={() => generateChaptersMediaMutation.mutate()}
           previousStepDone={story.chapters.every((chapter) => chapter.content !== null)}
@@ -71,7 +71,7 @@ function CreateStoryCard({ story }: StoryCardProps) {
           done={story.audio_url !== null}
           canProceed={!generateStoryMediaMutation.isPending}
           callMethod={() => generateStoryMediaMutation.mutate()}
-          previousStepDone={story.chapters.every((chapter) => chapter.audio_url !== null)}
+          previousStepDone={story.chapters.length > 0 && story.chapters.every((chapter) => chapter!.audio_url !== null)}
         />
         <Step
           title="Publish to Youtube"
