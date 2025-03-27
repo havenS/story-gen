@@ -1,6 +1,7 @@
 # Story Generator
 
 A full-stack application for generating stories, built with NestJS (backend) and Vite (frontend).
+Used for https://www.youtube.com/channel/UCefA_F2t7JzwP7XXB_UxDGg.
 
 ## Project Structure
 
