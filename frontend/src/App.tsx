@@ -1,5 +1,4 @@
 import DefaultLayout from "./layouts/default";
-import Spinner from "./components/common/spinner";
 import { CreateStoryCard } from "./components/story/create-story-card";
 import StoryCard from "./components/story/story-card";
 import { StoriesSection } from "./components/story/stories-grid";
@@ -7,18 +6,12 @@ import { HealthCheckProvider } from "./contexts/health-check-context";
 import { HealthCheckBanner } from "./components/common/health-check-banner";
 import { useHealthCheck } from "./contexts/health-check-context";
 import { useStories } from "./hooks/useStories";
+import { ErrorBoundary } from "./components/common/error-boundary";
+import { ServiceUnavailable } from "./components/common/service-unavailable";
 
 function AppContent() {
-  const { isLoading, isBackendHealthy, isLlmHealthy } = useHealthCheck();
+  const { isLoading, isBackendHealthy, isLlmHealthy, isGenApiHealthy, isGenApiBusy } = useHealthCheck();
   const { types, getStoriesForType } = useStories(isBackendHealthy);
-
-  if (isLoading) {
-    return <Spinner size={70} />;
-  }
-
-  if (!isBackendHealthy || !isLlmHealthy) {
-    return null;
-  }
 
   return (
     <div className="flex justify-center w-full">
@@ -56,14 +49,31 @@ function AppContent() {
   );
 }
 
+function AppWrapper() {
+  const { isLoading, isBackendHealthy, isLlmHealthy, isGenApiHealthy, isGenApiBusy } = useHealthCheck();
+
+  return (
+    <DefaultLayout>
+      <HealthCheckBanner />
+      <ServiceUnavailable
+        isBackendHealthy={isBackendHealthy}
+        isLlmHealthy={isLlmHealthy}
+        isGenApiHealthy={isGenApiHealthy}
+        isGenApiBusy={isGenApiBusy}
+        isLoading={isLoading}
+      />
+      <AppContent />
+    </DefaultLayout>
+  );
+}
+
 function App() {
   return (
-    <HealthCheckProvider>
-      <DefaultLayout>
-        <HealthCheckBanner />
-        <AppContent />
-      </DefaultLayout>
-    </HealthCheckProvider>
+    <ErrorBoundary>
+      <HealthCheckProvider>
+        <AppWrapper />
+      </HealthCheckProvider>
+    </ErrorBoundary>
   );
 }
 
