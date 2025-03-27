@@ -54,7 +54,7 @@ function CreateStoryCard({ story }: StoryCardProps) {
         />
         <Step
           title="Generate chapters content"
-          done={story.chapters.every((chapter) => chapter.content !== null)}
+          done={story.chapters.length > 0 && story.chapters.every((chapter) => chapter.content !== null)}
           canProceed={!generateChaptersContentMutation.isPending}
           callMethod={() => generateChaptersContentMutation.mutate()}
           previousStepDone={story.background_image !== null}

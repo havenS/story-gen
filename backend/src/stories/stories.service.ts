@@ -17,7 +17,7 @@ export class StoriesService {
     private readonly llmService: LLMService,
     private readonly typesService: TypesService,
     private readonly genApiService: GenApiService,
-  ) {}
+  ) { }
 
   getFolderName(story: Partial<StoryDto>) {
     this.logger.debug(
@@ -144,7 +144,7 @@ export class StoriesService {
   }
 
   async generateChaptersMedia(storyId: number) {
-    this.logger.log(`Starting media generation for story ID: ${storyId}`);
+    this.logger.log(`Starting chapter media generation for story ID: ${storyId}`);
     const story = (await this.prisma.stories.findUnique({
       where: { id: storyId },
       include: {
@@ -206,7 +206,7 @@ export class StoriesService {
     }
 
     this.logger.log(
-      `Successfully completed media generation for story ID: ${storyId}`,
+      `Successfully completed chapter media generation for story ID: ${storyId}`,
     );
     return story;
   }
