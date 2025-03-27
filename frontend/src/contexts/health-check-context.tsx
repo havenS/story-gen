@@ -31,7 +31,7 @@ export function HealthCheckProvider({ children }: { children: React.ReactNode })
 
         // Check Gen API health with timeout
         const genApiPromise = api.pingGenApi();
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('timeout')), 10000)
         );
 
@@ -59,8 +59,8 @@ export function HealthCheckProvider({ children }: { children: React.ReactNode })
     };
 
     checkHealth();
-    // Check health every 30 seconds
-    const interval = setInterval(checkHealth, 30000);
+    // Check health every minute
+    const interval = setInterval(checkHealth, 60000);
     return () => clearInterval(interval);
   }, []);
 
