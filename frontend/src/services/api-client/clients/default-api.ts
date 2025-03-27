@@ -77,7 +77,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createAndGenerate: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createAndGenerateStory: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/stories/create-and-generate`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -642,10 +642,10 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createAndGenerate(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createAndGenerate(options);
+        async createAndGenerateStory(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createAndGenerateStory(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.createAndGenerate']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.createAndGenerateStory']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -865,8 +865,8 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createAndGenerate(options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
-            return localVarFp.createAndGenerate(options).then((request) => request(axios, basePath));
+        createAndGenerateStory(options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
+            return localVarFp.createAndGenerateStory(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1040,8 +1040,8 @@ export class DefaultApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public createAndGenerate(options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).createAndGenerate(options).then((request) => request(this.axios, this.basePath));
+    public createAndGenerateStory(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).createAndGenerateStory(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

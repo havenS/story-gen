@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { api } from '@/services/api';
 import { AxiosResponse } from 'axios';
 import { StoryDto, TypeDto } from '@/services/api-client';
 

@@ -1,7 +1,7 @@
 import { useHealthCheck } from '@/contexts/health-check-context';
 
 export function HealthCheckBanner() {
-  const { isBackendHealthy, isGenApiHealthy, isGenApiBusy, isLlmHealthy, isLoading } = useHealthCheck();
+  const { isBackendHealthy, isGenApiBusy, isLlmHealthy, isLoading } = useHealthCheck();
 
   if (isLoading) {
     return null;

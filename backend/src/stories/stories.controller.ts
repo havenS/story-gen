@@ -9,7 +9,7 @@ import { Logger } from '@nestjs/common';
 export class StoriesController {
   private readonly logger = new Logger(StoriesController.name);
 
-  constructor(private readonly storiesService: StoriesService) {}
+  constructor(private readonly storiesService: StoriesService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new story' })
@@ -116,7 +116,7 @@ export class StoriesController {
       'The story has been created and all content has been generated.',
     type: StoryDto,
   })
-  async createAndGenerate(
+  async createAndGenerateStory(
     @Body('types_id') types_id: number,
   ): Promise<StoryDto> {
     this.logger.log(

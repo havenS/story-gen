@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import Spinner from "./spinner";
+import Spinner from "@/components/common/spinner";
 
 interface CreateStoryButtonProps {
   type: TypeDto;
@@ -20,7 +20,7 @@ function CreateStoryButton({ type }: CreateStoryButtonProps) {
   const queryClient = useQueryClient();
 
   const createStoryMutation = useMutation({
-    mutationFn: () => api.createAndGenerateFullStory({ data: { types_id: type.id } }),
+    mutationFn: () => api.createAndGenerateStory({ data: { types_id: type.id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [[`${type.id}-stories`]] });
       alert("Story created and generated successfully!");
