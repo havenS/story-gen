@@ -1,43 +1,22 @@
 import { jest } from '@jest/globals';
 import { LLMService } from '../../src/llm/llm.service';
 import { GenApiService } from '../../src/gen_api/gen_api.service';
-import { TypesService } from '../../src/types/types.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import {
-  expectedStoryResponse,
-  expectedMediaResponse,
-  testTypeData,
-} from '../fixtures/story.fixture';
+import { testTypeData } from '../fixtures/story.fixture';
 import { YoutubeService } from '../../src/youtube/youtube.service';
 import { Injectable } from '@nestjs/common';
 import { StoryDto } from '../../src/stories/dto/story.dto';
 import { PublishingService } from '../../src/publishing/publishing.service';
 import { StoriesService } from '../../src/stories/stories.service';
 import { PublishingDto } from '../../src/publishing/dto/publishing.dto';
-
-type LLMServiceMock = {
-  [K in keyof LLMService]: jest.Mock;
-};
-
-type GenApiServiceMock = {
-  [K in keyof GenApiService]: jest.Mock;
-};
-
-type TypesServiceMock = {
-  [K in keyof TypesService]: jest.Mock;
-};
-
-type YoutubeServiceMock = {
-  [K in keyof YoutubeService]: jest.Mock;
-};
-
-type PublishingServiceMock = {
-  [K in keyof PublishingService]: jest.Mock;
-};
-
-type StoriesServiceMock = {
-  [K in keyof StoriesService]: jest.Mock;
-};
+import { TypesService } from 'src/types/types.service';
+import { StoryWithRelations } from 'src/stories/types/story-with-relations';
+import { LLMResponseType } from 'src/llm/types/llm-response.type';
+import { Prisma } from '@prisma/client';
+import { YoutubeResponseType } from 'src/youtube/types/youtube-response.type';
+import { LLMMessageType } from 'src/llm/types/llm-message.type';
+import { ChapterDto } from 'src/chapters/dto/chapter.dto';
+import { StoryInfoType } from 'src/llm/types/story-info.type';
 
 @Injectable()
 export class MockLLMService implements Partial<LLMService> {
@@ -45,9 +24,17 @@ export class MockLLMService implements Partial<LLMService> {
     return true;
   }
 
-  async callLLM(model: string, method: string, json: boolean, temperature?: number, messages?: any[], seed?: number): Promise<any> {
+  async callLLM(
+    _model: string,
+    _method: string,
+    _json: boolean,
+    _temperature?: number,
+    messages?: LLMMessageType[],
+  ): Promise<LLMResponseType> {
     // Check if this is a story generation request
-    if (messages?.some(msg => msg.content.includes(testTypeData.story_prompt))) {
+    if (
+      messages?.some((msg) => msg.content.includes(testTypeData.story_prompt))
+    ) {
       return {
         message: {
           content: JSON.stringify({
@@ -61,16 +48,20 @@ export class MockLLMService implements Partial<LLMService> {
             chapterThreeSummary: 'Summary 3',
           }),
         },
-      };
+      } as LLMResponseType;
     }
     return {
       message: {
         content: 'test content',
       },
-    };
+    } as LLMResponseType;
   }
 
-  async generateStoryInfo(type: any): Promise<any> {
+  async generateStoryInfo(
+    _model: string,
+    _prompt: string,
+    _history: StoryDto[],
+  ): Promise<StoryInfoType> {
     return {
       title: 'Test Story',
       synopsis: 'Test Synopsis',
@@ -95,7 +86,11 @@ export class MockLLMService implements Partial<LLMService> {
     return { sound: 'test sound' };
   }
 
-  async generateYouTubeMetadata(): Promise<{ title: string; description: string; tags: string[] }> {
+  async generateYouTubeMetadata(): Promise<{
+    title: string;
+    description: string;
+    tags: string[];
+  }> {
     return {
       title: 'Test YouTube Title',
       description: 'Test YouTube Description',
@@ -110,29 +105,26 @@ export class MockLLMService implements Partial<LLMService> {
 
 @Injectable()
 export class MockGenApiService implements Partial<GenApiService> {
-  async generateStoryMedia(): Promise<any> {
+  async generateStoryMedia(
+    _story: StoryDto,
+    _folderName: string,
+    _backgroundImage: string,
+  ): Promise<{
+    audioFileName: string;
+    videoFileName: string;
+    thumbnailFileName: string;
+  }> {
     return {
-      videoUrl: 'https://example.com/video.mp4',
-      audioUrl: 'https://example.com/audio.mp3',
-      thumbnailUrl: 'https://example.com/thumbnail.jpg',
-      chapters: [
-        {
-          videoUrl: 'https://example.com/chapter1.mp4',
-          audioUrl: 'https://example.com/chapter1.mp3',
-        },
-        {
-          videoUrl: 'https://example.com/chapter2.mp4',
-          audioUrl: 'https://example.com/chapter2.mp3',
-        },
-        {
-          videoUrl: 'https://example.com/chapter3.mp4',
-          audioUrl: 'https://example.com/chapter3.mp3',
-        },
-      ],
+      audioFileName: 'story.mp3',
+      videoFileName: 'story.mp4',
+      thumbnailFileName: 'thumbnail.jpg',
     };
   }
 
-  async generateChapterMedia(chapter: any, folderName: string): Promise<{ audioFileName: string; videoFileName: string }> {
+  async generateChapterMedia(
+    _chapter: ChapterDto,
+    _folderName: string,
+  ): Promise<{ audioFileName: string; videoFileName: string }> {
     return {
       audioFileName: 'chapter.mp3',
       videoFileName: 'chapter.mp4',
@@ -142,27 +134,52 @@ export class MockGenApiService implements Partial<GenApiService> {
 
 @Injectable()
 export class MockYoutubeService implements Partial<YoutubeService> {
-  async uploadVideo(channelId: string, playlistId: string, videoPath: string, metadata: { title: string; description: string; tags: string[]; thumbnail: string; }, shortsPath: string[]): Promise<any> {
+  async uploadVideo(
+    _channelId: string,
+    _playlistId: string,
+    _videoPath: string,
+    metadata: {
+      title: string;
+      description: string;
+      tags: string[];
+      thumbnail: string;
+    },
+    _shortsPath: string[],
+  ): Promise<YoutubeResponseType> {
     return {
       id: 'test-video-id',
       snippet: {
         title: metadata.title,
         description: metadata.description,
-        tags: metadata.tags,
         thumbnails: {
           default: {
             url: metadata.thumbnail,
+            width: 120,
+            height: 90,
           },
         },
       },
     };
   }
 
-  async uploadShorts(videoId: string, shortsPaths: string[], metadata: { title: string; description: string; tags: string[]; }, publishHour: number): Promise<void> {
+  async uploadShorts(
+    _videoId: string,
+    _shortsPaths: string[],
+    _metadata: { title: string; description: string; tags: string[] },
+    _publishHour: number,
+  ): Promise<void> {
     // Do nothing
   }
 
-  async generateMetadata(story: Partial<StoryDto>, thumbnailPath: string): Promise<{ title: string; description: string; tags: string[]; thumbnail: string }> {
+  async generateMetadata(
+    story: Partial<StoryDto>,
+    thumbnailPath: string,
+  ): Promise<{
+    title: string;
+    description: string;
+    tags: string[];
+    thumbnail: string;
+  }> {
     return {
       title: 'Test Story',
       description: 'Test Synopsis',
@@ -198,7 +215,10 @@ export class MockPublishingService implements Partial<PublishingService> {
     };
   }
 
-  async updatePublishing(id: number, data: Partial<PublishingDto>): Promise<PublishingDto> {
+  async updatePublishing(
+    id: number,
+    data: Partial<PublishingDto>,
+  ): Promise<PublishingDto> {
     return {
       id,
       story_id: 1,
@@ -213,7 +233,7 @@ export class MockPublishingService implements Partial<PublishingService> {
 
 @Injectable()
 export class MockStoriesService implements Partial<StoriesService> {
-  async findOne(id: number): Promise<StoryDto> {
+  async findOne(id: number): Promise<StoryWithRelations> {
     return {
       id,
       name: 'Test Story',
@@ -233,19 +253,21 @@ export class MockStoriesService implements Partial<StoriesService> {
         sound_prompt: 'Test Sound Prompt',
         youtube_channel_id: 'channel123',
         youtube_playlist_id: 'playlist123',
+        chapter_count: 3,
+        word_count: 1000,
       },
       chapters: [],
     };
   }
 
-  getFolderName(story: StoryDto): string {
+  getFolderName(_story: StoryDto): string {
     return 'test-story';
   }
 }
 
 export function createMockTypesService(
   prisma: PrismaService,
-): TypesServiceMock {
+): Partial<TypesService> {
   return {
     findAll: jest.fn().mockImplementation(async () => {
       return prisma.types.findMany();
@@ -253,10 +275,12 @@ export function createMockTypesService(
     findOne: jest.fn().mockImplementation(async (id: number) => {
       return prisma.types.findUnique({ where: { id } });
     }),
-    create: jest.fn().mockImplementation(async (data: any) => {
-      return prisma.types.create({ data });
-    }),
+    create: jest
+      .fn()
+      .mockImplementation(async (data: Prisma.typesCreateInput) => {
+        return prisma.types.create({ data });
+      }),
     update: jest.fn(),
     remove: jest.fn(),
-  } as unknown as TypesServiceMock;
+  } as unknown as TypesService;
 }

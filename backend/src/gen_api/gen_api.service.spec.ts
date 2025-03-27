@@ -76,7 +76,10 @@ describe('GenApiService', () => {
       const prompt = 'test prompt';
       const folderName = 'test-folder';
       const filename = 'test-image.jpg';
-      const mockResponse = { success: true, data: Buffer.from('test-image-data') };
+      const mockResponse = {
+        success: true,
+        data: Buffer.from('test-image-data'),
+      };
 
       mockConfigurationService.getPublicDir.mockReturnValue('public');
       mockConfigurationService.getGenerationDir.mockReturnValue('generation');
@@ -92,7 +95,10 @@ describe('GenApiService', () => {
         width: 1920,
         height: 1080,
       });
-      expect(mockFileSystemService.writeFile).toHaveBeenCalledWith('test-path', mockResponse.data);
+      expect(mockFileSystemService.writeFile).toHaveBeenCalledWith(
+        'test-path',
+        mockResponse.data,
+      );
     });
   });
 
@@ -103,25 +109,43 @@ describe('GenApiService', () => {
       const storyType = 'Horror';
       const backgroundImage = 'background.jpg';
       const fileName = 'thumbnail.jpg';
-      const mockResponse = { success: true, data: Buffer.from('test-thumbnail-data') };
+      const mockResponse = {
+        success: true,
+        data: Buffer.from('test-thumbnail-data'),
+      };
 
       mockConfigurationService.getPublicDir.mockReturnValue('public');
       mockConfigurationService.getGenerationDir.mockReturnValue('generation');
       mockFileSystemService.buildPath.mockReturnValue('test-path');
-      mockFileSystemService.readFile.mockResolvedValue(Buffer.from('test-image-data'));
-      mockImageGenerationService.generateThumbnail.mockResolvedValue(mockResponse);
+      mockFileSystemService.readFile.mockResolvedValue(
+        Buffer.from('test-image-data'),
+      );
+      mockImageGenerationService.generateThumbnail.mockResolvedValue(
+        mockResponse,
+      );
 
-      await service.generateThumbnail(folderName, storyName, storyType, backgroundImage, fileName);
+      await service.generateThumbnail(
+        folderName,
+        storyName,
+        storyType,
+        backgroundImage,
+        fileName,
+      );
 
       expect(mockFileSystemService.ensureDirectoryExists).toHaveBeenCalled();
-      expect(mockImageGenerationService.generateThumbnail).toHaveBeenCalledWith({
-        brand: 'The Daily Tale: Dark Chronicles',
-        title: storyName,
-        type: storyType,
-        filename: fileName,
-        image: expect.any(Blob),
-      });
-      expect(mockFileSystemService.writeFile).toHaveBeenCalledWith('test-path', mockResponse.data);
+      expect(mockImageGenerationService.generateThumbnail).toHaveBeenCalledWith(
+        {
+          brand: 'The Daily Tale: Dark Chronicles',
+          title: storyName,
+          type: storyType,
+          filename: fileName,
+          image: expect.any(Blob),
+        },
+      );
+      expect(mockFileSystemService.writeFile).toHaveBeenCalledWith(
+        'test-path',
+        mockResponse.data,
+      );
     });
   });
 });

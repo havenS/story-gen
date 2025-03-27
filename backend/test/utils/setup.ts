@@ -12,10 +12,10 @@ import {
 } from '../mocks/services.mock';
 import { testTypeData } from '../fixtures/story.fixture';
 import { PrismaService } from 'src/prisma/prisma.service';
-
+import { PrismaClient } from '@prisma/client';
 export interface TestContext {
   app: INestApplication;
-  prismaService: any;
+  prismaService: PrismaService;
   llmService: LLMService;
   genApiService: GenApiService;
   typesService: TypesService;
@@ -43,13 +43,13 @@ export const setupTestApp = async (): Promise<INestApplication> => {
 
 export async function cleanupDatabase(prismaService: PrismaService) {
   // Delete in order of dependencies
-  prismaService.publishing.deleteMany()
-  prismaService.chapters.deleteMany()
-  prismaService.stories.deleteMany()
-  prismaService.types.deleteMany()
+  prismaService.publishing.deleteMany();
+  prismaService.chapters.deleteMany();
+  prismaService.stories.deleteMany();
+  prismaService.types.deleteMany();
 }
 
-export async function createTestType(prisma: any) {
+export async function createTestType(prisma: PrismaClient) {
   return await prisma.types.create({
     data: testTypeData,
   });

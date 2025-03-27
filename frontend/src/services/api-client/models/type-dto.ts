@@ -33,40 +33,52 @@ export interface TypeDto {
      */
     'name': string;
     /**
-     * 
+     * Story prompt
      * @type {string}
      * @memberof TypeDto
      */
     'story_prompt': string;
     /**
-     * 
+     * Chapter prompt
      * @type {string}
      * @memberof TypeDto
      */
     'chapter_prompt': string;
     /**
-     * 
+     * Image prompt
      * @type {string}
      * @memberof TypeDto
      */
     'image_prompt': string;
     /**
-     * 
+     * Sound prompt
      * @type {string}
      * @memberof TypeDto
      */
     'sound_prompt': string;
     /**
-     * 
+     * Youtube channel ID
      * @type {string}
      * @memberof TypeDto
      */
     'youtube_channel_id': string;
     /**
-     * 
+     * Youtube playlist ID
      * @type {string}
      * @memberof TypeDto
      */
     'youtube_playlist_id': string;
+    /**
+     * Number of chapters to generate
+     * @type {number}
+     * @memberof TypeDto
+     */
+    'chapter_count': number;
+    /**
+     * Minimum word count for the story
+     * @type {number}
+     * @memberof TypeDto
+     */
+    'word_count': number;
 }
 

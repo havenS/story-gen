@@ -5,7 +5,7 @@ import { CreatePublishingDto } from './dto/createPublishing.dto';
 
 @Injectable()
 export class PublishingService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async findOnePublishing(storyId: number): Promise<PublishingDto | null> {
     return this.prisma.publishing.findFirst({

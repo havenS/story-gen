@@ -4,7 +4,11 @@ import * as fs from 'fs';
 import { youtube_v3 } from 'googleapis';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { YoutubeService } from 'src/youtube/youtube.service';
-import { cleanupDatabase, createTestType, setupTestApp } from '../../test/utils/setup';
+import {
+  cleanupDatabase,
+  createTestType,
+  setupTestApp,
+} from '../../test/utils/setup';
 import { LLMService } from 'src/llm/llm.service';
 
 describe('Publishing Flow (e2e)', () => {
@@ -29,13 +33,14 @@ describe('Publishing Flow (e2e)', () => {
     it('should create a story, generate content, and publish to YouTube', async () => {
       jest.spyOn(fs, 'existsSync').mockReturnValue(true);
       const mockChapterContent = [
-        'Chapter 1 content '.repeat(200),  // ~400 words
-        'Chapter 2 content '.repeat(200),  // ~400 words
-        'Chapter 3 content '.repeat(200),  // ~400 words
+        'Chapter 1 content '.repeat(200), // ~400 words
+        'Chapter 2 content '.repeat(200), // ~400 words
+        'Chapter 3 content '.repeat(200), // ~400 words
       ];
 
-      jest.spyOn(llmService, 'generateChapterContent').mockResolvedValue(mockChapterContent);
-
+      jest
+        .spyOn(llmService, 'generateChapterContent')
+        .mockResolvedValue(mockChapterContent);
 
       // Create a test type
       const testType = await createTestType(prismaService);
@@ -77,7 +82,8 @@ describe('Publishing Flow (e2e)', () => {
 
       // Publish to YouTube
       const response = await request(app.getHttpServer())
-        .post(`/publishing/${story.id}/youtube`).expect(201);
+        .post(`/publishing/${story.id}/youtube`)
+        .expect(201);
       expect(response.body.id).toBe('test-video-id');
     });
 
@@ -94,7 +100,9 @@ describe('Publishing Flow (e2e)', () => {
       const story = createResponse.body;
 
       // Mock YouTube service to throw an error
-      jest.spyOn(youtubeService, 'generateMetadata').mockRejectedValue(new Error('Failed to generate metadata'));
+      jest
+        .spyOn(youtubeService, 'generateMetadata')
+        .mockRejectedValue(new Error('Failed to generate metadata'));
 
       // Attempt to publish to YouTube
       await request(app.getHttpServer())
@@ -141,8 +149,7 @@ describe('Publishing Flow (e2e)', () => {
 
       it('should return 404 if publishing not found', async () => {
         try {
-          await request(app.getHttpServer())
-            .get('/publishing/999');
+          await request(app.getHttpServer()).get('/publishing/999');
         } catch (error) {
           expect(error).toBeDefined();
         }
@@ -189,9 +196,7 @@ describe('Publishing Flow (e2e)', () => {
 
       it('should return 404 if story not found', async () => {
         try {
-
-          await request(app.getHttpServer())
-            .post('/publishing/999/youtube');
+          await request(app.getHttpServer()).post('/publishing/999/youtube');
         } catch (error) {
           expect(error).toBeDefined();
         }

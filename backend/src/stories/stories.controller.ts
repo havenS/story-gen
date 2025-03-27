@@ -1,7 +1,7 @@
-import { Controller, Post, Body, Param, Get, Put, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Put } from '@nestjs/common';
 import { StoriesService } from './stories.service';
 import { StoryDto } from './dto/story.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { Logger } from '@nestjs/common';
 
@@ -9,7 +9,7 @@ import { Logger } from '@nestjs/common';
 export class StoriesController {
   private readonly logger = new Logger(StoriesController.name);
 
-  constructor(private readonly storiesService: StoriesService) { }
+  constructor(private readonly storiesService: StoriesService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new story' })
@@ -19,8 +19,12 @@ export class StoriesController {
     type: StoryDto,
   })
   async create(@Body() createStoryDto: CreateStoryDto): Promise<StoryDto> {
-    this.logger.log(`Creating new story with type ID: ${createStoryDto.types_id}...`);
-    const story = await this.storiesService.createStory(createStoryDto.types_id);
+    this.logger.log(
+      `Creating new story with type ID: ${createStoryDto.types_id}...`,
+    );
+    const story = await this.storiesService.createStory(
+      createStoryDto.types_id,
+    );
     this.logger.log(`Successfully created story with ID: ${story.id}`);
     return story;
   }
@@ -48,7 +52,9 @@ export class StoriesController {
   })
   async generateChaptersContent(@Param('id') id: string): Promise<StoryDto> {
     this.logger.log(`Generating content for story with ID: ${id}...`);
-    const story = await this.storiesService.generateChaptersContent(parseInt(id, 10));
+    const story = await this.storiesService.generateChaptersContent(
+      parseInt(id, 10),
+    );
     this.logger.log(`Successfully generated content for story with ID: ${id}`);
     return story;
   }
@@ -64,7 +70,7 @@ export class StoriesController {
     const story = await this.storiesService.generateChaptersMedia(
       parseInt(id, 10),
     );
-    return story;
+    return story as StoryDto;
   }
 
   @Post(':id/generate-media')
@@ -76,7 +82,9 @@ export class StoriesController {
   })
   async generateFullStoryMedia(@Param('id') id: string): Promise<StoryDto> {
     this.logger.log(`Generating media for story with ID: ${id}...`);
-    const story = await this.storiesService.generateFullStoryMedia(parseInt(id, 10));
+    const story = await this.storiesService.generateFullStoryMedia(
+      parseInt(id, 10),
+    );
     this.logger.log(`Successfully generated media for story with ID: ${id}`);
     return story;
   }
@@ -111,9 +119,13 @@ export class StoriesController {
   async createAndGenerate(
     @Body('types_id') types_id: number,
   ): Promise<StoryDto> {
-    this.logger.log(`Starting create-and-generate process for type ID: ${types_id}...`);
+    this.logger.log(
+      `Starting create-and-generate process for type ID: ${types_id}...`,
+    );
     const story = await this.storiesService.createStory(types_id);
-    this.logger.log(`Created story with ID: ${story.id}, generating background image...`);
+    this.logger.log(
+      `Created story with ID: ${story.id}, generating background image...`,
+    );
     await this.storiesService.generateStoryBackgroundImage(story);
     this.logger.log(`Generated background image, generating content...`);
     await this.storiesService.generateChaptersContent(story.id);
@@ -121,7 +133,9 @@ export class StoriesController {
     await this.storiesService.generateChaptersMedia(story.id);
     this.logger.log(`Generated chapters media, generating full story media...`);
     await this.storiesService.generateFullStoryMedia(story.id);
-    this.logger.log(`Successfully completed create-and-generate process for story ID: ${story.id}`);
+    this.logger.log(
+      `Successfully completed create-and-generate process for story ID: ${story.id}`,
+    );
     return this.storiesService.findOne(story.id);
   }
 }

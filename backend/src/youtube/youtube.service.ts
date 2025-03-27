@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { StoryDto } from '../stories/dto/story.dto';
 import { LLMService } from '../llm/llm.service';
+import { YoutubeResponseType } from './types/youtube-response.type';
 
 @Injectable()
 export class YoutubeService {
@@ -96,7 +97,7 @@ export class YoutubeService {
       thumbnail: string;
     },
     shortsPath: string[],
-  ) {
+  ): Promise<YoutubeResponseType> {
     try {
       this.logger.log('Retrieving token');
       await this.loadToken();
@@ -171,7 +172,7 @@ export class YoutubeService {
       );
 
       this.logger.log(`Video uploaded successfully: ${videoResponse.data.id}`);
-      return videoResponse.data;
+      return videoResponse.data as YoutubeResponseType;
     } catch (error) {
       this.logger.error(`Error uploading video: ${error.message}`);
       throw error;
@@ -251,7 +252,11 @@ export class YoutubeService {
         story,
       );
 
-      if (!generatedStoryData || !generatedStoryData.title || !generatedStoryData.description) {
+      if (
+        !generatedStoryData ||
+        !generatedStoryData.title ||
+        !generatedStoryData.description
+      ) {
         throw new Error('Failed to generate valid YouTube metadata');
       }
 

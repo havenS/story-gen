@@ -42,7 +42,9 @@ describe('YoutubeController', () => {
 
     it('should handle logout errors', async () => {
       const errorMessage = 'Logout failed';
-      jest.spyOn(youtubeService, 'logout').mockRejectedValue(new Error(errorMessage));
+      jest
+        .spyOn(youtubeService, 'logout')
+        .mockRejectedValue(new Error(errorMessage));
 
       const result = await controller.youtubeLogout();
       expect(result).toEqual({ error: errorMessage });
@@ -52,7 +54,9 @@ describe('YoutubeController', () => {
   describe('youtubeAuthCallback', () => {
     it('should save token successfully', async () => {
       const code = 'test-auth-code';
-      jest.spyOn(youtubeService, 'saveTokenFromCode').mockResolvedValue(undefined);
+      jest
+        .spyOn(youtubeService, 'saveTokenFromCode')
+        .mockResolvedValue(undefined);
 
       const result = await controller.youtubeAuthCallback(code);
       expect(result).toEqual({ message: 'Token saved successfully' });
@@ -66,7 +70,9 @@ describe('YoutubeController', () => {
     it('should handle save token errors', async () => {
       const code = 'test-auth-code';
       const errorMessage = 'Token save failed';
-      jest.spyOn(youtubeService, 'saveTokenFromCode').mockRejectedValue(new Error(errorMessage));
+      jest
+        .spyOn(youtubeService, 'saveTokenFromCode')
+        .mockRejectedValue(new Error(errorMessage));
 
       const result = await controller.youtubeAuthCallback(code);
       expect(result).toEqual({ error: errorMessage });

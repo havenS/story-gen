@@ -9,4 +9,4 @@ import { ConfigurationService } from '../config/configuration.service';
   providers: [GenApiService, ConfigurationService],
   exports: [GenApiService],
 })
-export class GenApiModule { }
+export class GenApiModule {}

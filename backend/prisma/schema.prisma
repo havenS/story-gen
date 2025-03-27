@@ -43,6 +43,8 @@ model types {
   chapter_prompt      String
   image_prompt        String
   sound_prompt        String
+  chapter_count       Int       @default(3)
+  word_count          Int       @default(1000)
   stories             stories[]
   youtube_channel_id  String? @db.VarChar
   youtube_playlist_id String? @db.VarChar
