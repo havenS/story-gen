@@ -10,7 +10,7 @@ import { ErrorBoundary } from "./components/common/error-boundary";
 import { ServiceUnavailable } from "./components/common/service-unavailable";
 
 function AppContent() {
-  const { isLoading, isBackendHealthy, isLlmHealthy, isGenApiHealthy, isGenApiBusy } = useHealthCheck();
+  const { isBackendHealthy } = useHealthCheck();
   const { types, getStoriesForType } = useStories(isBackendHealthy);
 
   return (

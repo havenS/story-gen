@@ -6,28 +6,32 @@ export function useStoryMutations(storyId: number, typesId: number) {
 
   const invalidateQueries = () => {
     queryClient.invalidateQueries({
-      queryKey: [[`${typesId}-stories`]],
+      queryKey: [`${typesId}-stories`],
     });
   };
 
   const generateImageMutation = useMutation({
     mutationFn: () => api.generateStoryBackgroundImage(String(storyId)),
     onSuccess: invalidateQueries,
+    onError: invalidateQueries,
   });
 
   const generateChaptersContentMutation = useMutation({
     mutationFn: () => api.generateChaptersContent(String(storyId)),
     onSuccess: invalidateQueries,
+    onError: invalidateQueries,
   });
 
   const generateChaptersMediaMutation = useMutation({
     mutationFn: () => api.generateStoryChapterMedia(String(storyId)),
     onSuccess: invalidateQueries,
+    onError: invalidateQueries,
   });
 
   const generateStoryMediaMutation = useMutation({
     mutationFn: () => api.generateFullStoryMedia(String(storyId)),
     onSuccess: invalidateQueries,
+    onError: invalidateQueries,
   });
 
   const publishToYoutubeMutation = useMutation({
@@ -41,6 +45,7 @@ export function useStoryMutations(storyId: number, typesId: number) {
       return api.publishYoutube(String(storyId));
     },
     onSuccess: invalidateQueries,
+    onError: invalidateQueries,
   });
 
   return {

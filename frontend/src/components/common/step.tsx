@@ -1,6 +1,6 @@
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Circle, ArrowRight } from "lucide-react";
+import { CheckCircle2, Circle, ArrowRight, Loader2 } from "lucide-react";
 
 interface StepProps {
   title: string;
@@ -9,6 +9,7 @@ interface StepProps {
   canProceed?: boolean;
   canRetry?: boolean;
   previousStepDone?: boolean;
+  isPending?: boolean;
 }
 
 export function Step({
@@ -18,6 +19,7 @@ export function Step({
   canProceed = true,
   canRetry = false,
   previousStepDone = true,
+  isPending = false,
 }: StepProps) {
   return (
     <div className={cn(
@@ -30,28 +32,33 @@ export function Step({
         <span className="text-foreground/50">
           {done ? (
             <CheckCircle2 className="w-5 h-5 text-green-500" />
+          ) : isPending ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <Circle className="w-5 h-5" />
           )}
         </span>
         <div className="flex flex-col">
           <p className="text-sm font-medium">{title}</p>
-          {!done && previousStepDone && canProceed && (
+          {!done && previousStepDone && canProceed && !isPending && (
             <p className="text-xs text-muted-foreground">Ready to proceed</p>
           )}
           {!previousStepDone && (
             <p className="text-xs text-muted-foreground">Waiting for previous step</p>
           )}
-          {done && canRetry && (
+          {done && canRetry && !isPending && (
             <p className="text-xs text-muted-foreground">Can be refreshed</p>
+          )}
+          {isPending && (
+            <p className="text-xs text-muted-foreground">Processing...</p>
           )}
         </div>
       </div>
-      {(!done || canRetry) && canProceed && callMethod && previousStepDone && (
-        <Button 
+      {(!done || canRetry) && canProceed && callMethod && previousStepDone && !isPending && (
+        <Button
           variant={done ? "outline" : "default"}
-          size="sm" 
-          className="gap-2" 
+          size="sm"
+          className="gap-2"
           onClick={callMethod}
         >
           {done && canRetry ? "Refresh" : "Proceed"}
