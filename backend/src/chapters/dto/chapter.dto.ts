@@ -34,6 +34,18 @@ export class ChapterDto {
   content?: string;
 
   @ApiProperty({
+    description: 'Audio URL of the chapter',
+    example: 'https://example.com/chapter1.mp3',
+  })
+  audio_url?: string;
+
+  @ApiProperty({
+    description: 'Video URL of the chapter',
+    example: 'https://example.com/chapter1.mp4',
+  })
+  video_url?: string;
+
+  @ApiProperty({
     description: 'Background sound for the chapter',
     example: 'wind.mp3',
   })
