@@ -1,111 +1,121 @@
 # Story Generation API
 
-This is the backend API for the Story Generation project. It handles video, audio, and image generation for story content.
+A Python-based API service for generating story content, including video, audio, and image generation.
 
-## Setup
+## Features
+
+- Video generation with transitions and effects
+- Audio synthesis and processing
+- Image generation and manipulation
+- Story content processing
+- Integration with various AI models
+
+## Prerequisites
 
 ### System Dependencies
 
-Before installing the Python packages, you need to install these system dependencies:
-
-#### On macOS:
-
-```
-$ brew install espeak ffmpeg imagemagick
-$ export AENEAS_WITH_CEW=False
+#### macOS
+```bash
+brew install espeak ffmpeg imagemagick
+export AENEAS_WITH_CEW=False
 ```
 
-#### On Ubuntu/Debian:
-
+#### Ubuntu/Debian
+```bash
+sudo apt-get install espeak ffmpeg imagemagick
 ```
-$ sudo apt-get install espeak ffmpeg imagemagick
-```
 
-#### On Windows:
-
+#### Windows
 Download and install:
-
-- espeak: http://espeak.sourceforge.net/download.html
-- ffmpeg: https://ffmpeg.org/download.html
-- imagemagick: https://imagemagick.org/script/download.php
+- [espeak](http://espeak.sourceforge.net/download.html)
+- [ffmpeg](https://ffmpeg.org/download.html)
+- [imagemagick](https://imagemagick.org/script/download.php)
 
 ### Python Environment
 
-Create a virtual environment and install the required packages:
-
-```
-$ python -m venv venv
-$ source venv/bin/activate  # On Windows: venv\Scripts\activate
-$ pip install -r requirements.txt
+1. Create and activate a conda environment:
+```bash
+conda create -n story_gen python=3.9 -y
+conda activate story_gen
 ```
 
-Install Aenas:
-https://github.com/sillsdev/aeneas-installer/releases
+2. Install additional dependencies:
+```bash
+conda config --add channels conda-forge
+conda install montreal-forced-aligner
+mfa model download acoustic english_us_arpa
+mfa model download dictionary english_us_arpa
+```
 
-## Running the API
+3. Install Python packages:
+```bash
+pip install -r requirements.txt
+pip install "setuptools<60.0"
+AENEAS_WITH_CEW=False pip install aeneas
+```
 
-To run the API locally:
+## Project Structure
 
 ```
-$ python app.py
+gen_api/
+├── app.py              # Main application entry point
+├── controllers/        # API route controllers
+├── services/          # Business logic services
+├── helpers/           # Utility functions
+├── assets/           # Static assets
+├── uploads/          # Temporary file storage
+├── tests/            # Test files
+└── requirements.txt  # Python dependencies
+```
+
+## Running the Service
+
+### Local Development
+```bash
+python app.py
+```
+
+### Production Server
+```bash
+PYTORCH_ENABLE_MPS_FALLBACK=1 \
+PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 \
+waitress-serve --port=8001 --threads=1 --channel-timeout=3000 app:app
+```
+
+### Docker
+```bash
+docker build -t story_gen .
 ```
 
 ## Testing
 
-To run the tests:
+### Running Tests
+```bash
+# Run all tests
+python -m pytest
 
-```
-$ python -m pytest
-```
+# Run specific test file
+python -m pytest tests/test_video_service.py
 
-To run specific test files:
+# Run integration tests only
+python -m pytest -m integration
 
-```
-$ python -m pytest tests/test_video_service.py
-```
-
-To run integration tests (these require all system dependencies):
-
-```
-$ python -m pytest -m integration
+# Run unit tests only
+python -m pytest -m "not integration"
 ```
 
-To run only unit tests (skipping integration tests):
+## Environment Variables
 
-```
-$ python -m pytest -m "not integration"
-```
-
-# Requirements
-
-## Global
-
-```
-$ conda create -n story_gen python=3.9 -y
-$ conda activate story_gen
+Create a `.env` file based on `.env.example`:
+```env
+OPENAI_API_KEY=your_openai_api_key
+OLLAMA_API_URL=your_ollama_api_url
+YOUTUBE_API_KEY=your_youtube_api_key
 ```
 
-## Intro-api
+## API Endpoints
 
-```
-$ brew install imagemagick sox sound-touch espeak ffmpeg
-$ conda config --add channels conda-forge
-$ conda install montreal-forced-aligner
-$ mfa model download acoustic english_us_arpa
-$ mfa model download dictionary english_us_arpa
-$ pip install -r requirements.txt
-$ pip install "setuptools<60.0"
-$ AENEAS_WITH_CEW=False pip install aeneas
-```
-
-# Run
-
-```
-$ PYTORCH_ENABLE_MPS_FALLBACK=1 PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0  waitress-serve --port=8001 --threads=1 --channel-timeout=3000 app:app
-```
-
-# Docker
-
-```
-$ docker build -t story_gen .
-```
+- `POST /generate/story` - Generate a complete story
+- `POST /generate/video` - Generate video content
+- `POST /generate/audio` - Generate audio content
+- `POST /generate/image` - Generate images
