@@ -64,7 +64,7 @@ function CreateStoryCard({ story }: StoryCardProps) {
           done={story.chapters.length > 0 && story.chapters.every((chapter) => chapter!.audio_url !== null)}
           canProceed={!generateChaptersMediaMutation.isPending}
           callMethod={() => generateChaptersMediaMutation.mutate()}
-          previousStepDone={story.chapters.every((chapter) => chapter.content !== null)}
+          previousStepDone={story.chapters.length > 0 && story.chapters.every((chapter) => chapter.content !== null)}
         />
         <Step
           title="Generate full story media"
