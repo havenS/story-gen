@@ -51,6 +51,7 @@ function CreateStoryCard({ story }: StoryCardProps) {
           canProceed={!generateImageMutation.isPending}
           callMethod={() => generateImageMutation.mutate()}
           previousStepDone={true}
+          isPending={generateImageMutation.isPending}
         />
         <Step
           title="Generate chapters content"
@@ -58,6 +59,7 @@ function CreateStoryCard({ story }: StoryCardProps) {
           canProceed={!generateChaptersContentMutation.isPending}
           callMethod={() => generateChaptersContentMutation.mutate()}
           previousStepDone={story.background_image !== null}
+          isPending={generateChaptersContentMutation.isPending}
         />
         <Step
           title="Generate chapters media"
@@ -65,6 +67,7 @@ function CreateStoryCard({ story }: StoryCardProps) {
           canProceed={!generateChaptersMediaMutation.isPending}
           callMethod={() => generateChaptersMediaMutation.mutate()}
           previousStepDone={story.chapters.length > 0 && story.chapters.every((chapter) => chapter.content !== null)}
+          isPending={generateChaptersMediaMutation.isPending}
         />
         <Step
           title="Generate full story media"
@@ -72,6 +75,7 @@ function CreateStoryCard({ story }: StoryCardProps) {
           canProceed={!generateStoryMediaMutation.isPending}
           callMethod={() => generateStoryMediaMutation.mutate()}
           previousStepDone={story.chapters.length > 0 && story.chapters.every((chapter) => chapter!.audio_url !== null)}
+          isPending={generateStoryMediaMutation.isPending}
         />
         <Step
           title="Publish to Youtube"
@@ -82,6 +86,7 @@ function CreateStoryCard({ story }: StoryCardProps) {
           canProceed={!publishToYoutubeMutation.isPending}
           callMethod={() => publishToYoutubeMutation.mutate()}
           previousStepDone={story.audio_url !== null}
+          isPending={publishToYoutubeMutation.isPending}
         />
       </CardContent>
     </Card>

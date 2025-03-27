@@ -1,7 +1,17 @@
 # Story Generator
 
-A full-stack application for generating stories, built with NestJS (backend) and Vite (frontend).
+A full-stack application for generating stories, built with NestJS (backend), Flask (Gen API) and ReactJS/Vite (frontend). Everything runs locally (except for TTS as the current state of local TTS is not as good/fast as the free EdgeTTS service).
 Used for https://www.youtube.com/channel/UCefA_F2t7JzwP7XXB_UxDGg.
+
+## Architecture
+
+```mermaid
+graph TD
+    A[Frontend - Vite/React] -->|HTTP/API| B[Backend - NestJS] --> |HTTP/API| C[Gen API - Flask]
+    B -->|Database| C[(PostgreSQL)]
+    C -->|External API| D[Edge API]
+    B -->|External API| E[Youtube API]
+```
 
 ## Project Structure
 
@@ -56,6 +66,9 @@ Used for https://www.youtube.com/channel/UCefA_F2t7JzwP7XXB_UxDGg.
 - `npm run dev`: Start both frontend and backend in development mode
 - `npm run frontend`: Start only the frontend development server
 - `npm run backend`: Start only the backend development server
+- `npm run test`: Run tests
+- `npm run lint`: Run linting
+- `npm run format`: Format code
 
 ## Environment Setup
 
