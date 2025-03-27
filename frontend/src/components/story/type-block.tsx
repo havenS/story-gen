@@ -1,15 +1,15 @@
-import { StoryDto, TypeDto } from "../services/api-client";
-import Spinner from "./spinner";
-import { api } from "../services/api";
-import CreateStoryButton from "./create-story-button";
+import { StoryDto, TypeDto } from "@/services/api-client";
+import Spinner from "@/components/common/spinner";
+import { api } from "@/services/api";
+import CreateStoryButton from "@/components/story/create-story-button";
 import { useQuery } from "@tanstack/react-query";
-import StoryCard from "./story-card";
+import StoryCard from "@/components/story/story-card";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "./ui/accordion";
+} from "@/components/ui/accordion";
 import { AxiosResponse } from "axios";
 
 interface TypeBlockProps {

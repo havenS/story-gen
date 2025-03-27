@@ -16,7 +16,7 @@ export function CreateStoryCard({ title, type }: CreateStoryCardProps) {
   const queryClient = useQueryClient();
 
   const createStoryMutation = useMutation({
-    mutationFn: () => api.createAndGenerate({ data: { types_id: type.id } }),
+    mutationFn: () => api.createAndGenerateStory({ data: { types_id: type.id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [[`${type.id}-stories`]] });
       alert("Story created and generated successfully!");

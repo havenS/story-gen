@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
-import { Button } from "../ui/button";
+
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface StoriesGridProps {
   children: React.ReactNode;
@@ -10,7 +11,7 @@ interface StoriesGridProps {
 
 export function StoriesGrid({ children, className }: StoriesGridProps) {
   return (
-    <div 
+    <div
       className={cn(
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
         "gap-6",
@@ -30,12 +31,12 @@ interface StoriesSectionProps {
   createButton?: React.ReactNode;
 }
 
-export function StoriesSection({ 
-  title, 
-  children, 
-  className, 
+export function StoriesSection({
+  title,
+  children,
+  className,
   publishedContent,
-  createButton 
+  createButton
 }: StoriesSectionProps) {
   const [showPublished, setShowPublished] = useState(false);
 

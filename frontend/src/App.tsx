@@ -1,13 +1,13 @@
-import DefaultLayout from "./layouts/default";
-import { CreateStoryCard } from "./components/story/create-story-card";
-import StoryCard from "./components/story/story-card";
-import { StoriesSection } from "./components/story/stories-grid";
-import { HealthCheckProvider } from "./contexts/health-check-context";
-import { HealthCheckBanner } from "./components/common/health-check-banner";
-import { useHealthCheck } from "./contexts/health-check-context";
-import { useStories } from "./hooks/useStories";
-import { ErrorBoundary } from "./components/common/error-boundary";
-import { ServiceUnavailable } from "./components/common/service-unavailable";
+import DefaultLayout from "@/layouts/default";
+import { CreateStoryCard } from "@/components/story/create-story-card";
+import StoryCard from "@/components/story/story-card";
+import { StoriesSection } from "@/components/story/stories-grid";
+import { HealthCheckProvider } from "@/contexts/health-check-context";
+import { HealthCheckBanner } from "@/components/common/health-check-banner";
+import { useHealthCheck } from "@/contexts/health-check-context";
+import { useStories } from "@/hooks/useStories";
+import { ErrorBoundary } from "@/components/common/error-boundary";
+import { ServiceUnavailable } from "@/components/common/service-unavailable";
 
 function AppContent() {
   const { isBackendHealthy } = useHealthCheck();
