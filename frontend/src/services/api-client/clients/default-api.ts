@@ -787,7 +787,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async pingGenApi(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
+        async pingGenApi(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.pingGenApi(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.pingGenApi']?.[localVarOperationServerIndex]?.url;
@@ -798,7 +798,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async pingLLM(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
+        async pingLLM(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.pingLLM(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.pingLLM']?.[localVarOperationServerIndex]?.url;
@@ -974,7 +974,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pingGenApi(options?: RawAxiosRequestConfig): AxiosPromise<object> {
+        pingGenApi(options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.pingGenApi(options).then((request) => request(axios, basePath));
         },
         /**
@@ -982,7 +982,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pingLLM(options?: RawAxiosRequestConfig): AxiosPromise<object> {
+        pingLLM(options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.pingLLM(options).then((request) => request(axios, basePath));
         },
         /**

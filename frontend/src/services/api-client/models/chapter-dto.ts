@@ -21,58 +21,58 @@
  */
 export interface ChapterDto {
     /**
-     * 
+     * ID of the chapter
      * @type {number}
      * @memberof ChapterDto
      */
-    'id': number;
+    'id'?: number;
     /**
-     * 
+     * Number of the chapter
      * @type {number}
      * @memberof ChapterDto
      */
-    'number': number;
+    'number'?: number;
     /**
-     * 
+     * Title of the chapter
      * @type {string}
      * @memberof ChapterDto
      */
     'title': string;
     /**
-     * 
+     * Summary of the chapter
      * @type {string}
      * @memberof ChapterDto
      */
     'summary': string;
     /**
-     * 
+     * Content of the chapter
      * @type {string}
      * @memberof ChapterDto
      */
-    'content': string;
+    'content'?: string;
     /**
-     * 
+     * Background sound for the chapter
      * @type {string}
      * @memberof ChapterDto
      */
-    'background_sound': string;
+    'background_sound'?: string;
     /**
-     * 
-     * @type {string}
-     * @memberof ChapterDto
-     */
-    'audio_url': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ChapterDto
-     */
-    'video_url': string;
-    /**
-     * 
+     * ID of the story this chapter belongs to
      * @type {number}
      * @memberof ChapterDto
      */
-    'stories_id': number;
+    'story_id'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChapterDto
+     */
+    'created_at'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChapterDto
+     */
+    'updated_at'?: string;
 }
 

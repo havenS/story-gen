@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Post, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { join } from 'path';
 import { StoryDto } from '../stories/dto/story.dto';
 import { StoriesService } from '../stories/stories.service';
@@ -12,7 +19,7 @@ export class PublishingController {
     private publishingService: PublishingService,
     private youtubeService: YoutubeService,
     private storiesService: StoriesService,
-  ) { }
+  ) {}
 
   @Get(':storyId')
   async getPublishing(@Param('storyId') storyId: string) {
@@ -30,8 +37,13 @@ export class PublishingController {
         throw new NotFoundException(`Story with ID ${storyId} not found`);
       }
 
-      if (!story.types?.youtube_channel_id || !story.types?.youtube_playlist_id) {
-        throw new BadRequestException('Story type is missing YouTube configuration');
+      if (
+        !story.types?.youtube_channel_id ||
+        !story.types?.youtube_playlist_id
+      ) {
+        throw new BadRequestException(
+          'Story type is missing YouTube configuration',
+        );
       }
 
       const folderName = this.storiesService.getFolderName(story);
@@ -90,10 +102,14 @@ export class PublishingController {
 
       // Check if files exist
       if (!fs.existsSync(videoPath)) {
-        throw new BadRequestException('Video file not found. Please generate the video first.');
+        throw new BadRequestException(
+          'Video file not found. Please generate the video first.',
+        );
       }
       if (!fs.existsSync(thumbnailPath)) {
-        throw new BadRequestException('Thumbnail file not found. Please generate the thumbnail first.');
+        throw new BadRequestException(
+          'Thumbnail file not found. Please generate the thumbnail first.',
+        );
       }
 
       const metadata = await this.youtubeService.generateMetadata(
@@ -127,10 +143,15 @@ export class PublishingController {
 
       return response;
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
-      throw new BadRequestException(`Failed to publish to YouTube: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to publish to YouTube: ${error.message}`,
+      );
     }
   }
 }

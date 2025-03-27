@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "types" ADD COLUMN     "chapter_count" INTEGER NOT NULL DEFAULT 3,
+ADD COLUMN     "word_count" INTEGER NOT NULL DEFAULT 1000;

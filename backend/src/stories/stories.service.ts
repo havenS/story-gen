@@ -6,6 +6,7 @@ import { StoryDto } from './dto/story.dto';
 import { TypesService } from '../types/types.service';
 import { GenApiService } from '../gen_api/gen_api.service';
 import { StoryWithRelations } from './types/story-with-relations';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class StoriesService {
@@ -16,10 +17,12 @@ export class StoriesService {
     private readonly llmService: LLMService,
     private readonly typesService: TypesService,
     private readonly genApiService: GenApiService,
-  ) { }
+  ) {}
 
   getFolderName(story: Partial<StoryDto>) {
-    this.logger.debug(`Generating folder name for story: ${story?.name || story?.id || 'unknown'}`);
+    this.logger.debug(
+      `Generating folder name for story: ${story?.name || story?.id || 'unknown'}`,
+    );
     if (!story?.name) {
       return `story_${story?.id || Date.now()}`;
     }
@@ -39,8 +42,10 @@ export class StoriesService {
    * @returns Story with updated chapters content
    */
   async generateChaptersContent(storyId: number, retryNumber = 0) {
-    this.logger.log(`Starting chapter content generation for story ID: ${storyId} (attempt ${retryNumber + 1})`);
-    const story = await this.prisma.stories.findUnique({
+    this.logger.log(
+      `Starting chapter content generation for story ID: ${storyId} (attempt ${retryNumber + 1})`,
+    );
+    const story = (await this.prisma.stories.findUnique({
       where: { id: storyId },
       include: {
         chapters: {
@@ -48,10 +53,23 @@ export class StoriesService {
             number: 'asc',
           },
         },
-        types: true,
+        types: {
+          select: {
+            id: true,
+            name: true,
+            story_prompt: true,
+            chapter_prompt: true,
+            image_prompt: true,
+            sound_prompt: true,
+            chapter_count: true,
+            word_count: true,
+            youtube_channel_id: true,
+            youtube_playlist_id: true,
+          },
+        },
         publishings: true,
       },
-    });
+    })) as StoryWithRelations;
 
     let chaptersContent;
     try {
@@ -61,25 +79,31 @@ export class StoriesService {
         story.types.chapter_prompt,
         story as unknown as StoryDto,
       );
-      if (chaptersContent.length !== 3) {
-        this.logger.error(`Invalid number of chapters: ${chaptersContent.length}`);
+      if (chaptersContent.length !== story.types.chapter_count) {
+        this.logger.error(
+          `Invalid number of chapters: ${chaptersContent.length}`,
+        );
         throw new Error('Invalid number of chapters content');
       }
       const totalWordCount = chaptersContent.reduce(
         (acc, content) => acc + content.split(' ').length,
         0,
       );
-      if (totalWordCount < 1000) {
+      if (totalWordCount < story.types.word_count) {
         this.logger.error(`Total word count too low: ${totalWordCount}`);
         throw new Error(
-          'Total word count of chapters content is less than 1600',
+          `Total word count of chapters content is less than ${story.types.word_count}`,
         );
       }
-      this.logger.debug(`Successfully generated ${chaptersContent.length} chapters with ${totalWordCount} total words`);
+      this.logger.debug(
+        `Successfully generated ${chaptersContent.length} chapters with ${totalWordCount} total words`,
+      );
     } catch (error) {
       this.logger.error(`Error generating chapter content: ${error.message}`);
       if (retryNumber <= 10) {
-        this.logger.warn(`Retrying chapter content generation (attempt ${retryNumber + 2})...`);
+        this.logger.warn(
+          `Retrying chapter content generation (attempt ${retryNumber + 2})...`,
+        );
         return this.generateChaptersContent(storyId, retryNumber + 1);
       }
       throw error;
@@ -108,10 +132,14 @@ export class StoriesService {
         where: { id: chapter.id },
         data: chapter,
       });
-      this.logger.debug(`Updated chapter ${chapter.number} with content and background sound`);
+      this.logger.debug(
+        `Updated chapter ${chapter.number} with content and background sound`,
+      );
     }
 
-    this.logger.log(`Successfully completed chapter content generation for story ID: ${storyId}`);
+    this.logger.log(
+      `Successfully completed chapter content generation for story ID: ${storyId}`,
+    );
     return story;
   }
 
@@ -125,19 +153,38 @@ export class StoriesService {
             number: 'asc',
           },
         },
-        types: true,
+        types: {
+          select: {
+            id: true,
+            name: true,
+            story_prompt: true,
+            chapter_prompt: true,
+            image_prompt: true,
+            sound_prompt: true,
+            chapter_count: true,
+            word_count: true,
+            youtube_channel_id: true,
+            youtube_playlist_id: true,
+          },
+        },
       },
     })) as StoryWithRelations;
 
-    const folderName = this.getFolderName(story);
+    const folderName = this.getFolderName(
+      story as unknown as Partial<StoryDto>,
+    );
     this.logger.debug(`Using folder name: ${folderName} for media generation`);
 
     for (const chapter of story.chapters) {
-      this.logger.log(`Starting media generation for chapter ${chapter.number}...`);
+      this.logger.log(
+        `Starting media generation for chapter ${chapter.number}...`,
+      );
       await this.genApiService
         .generateChapterMedia(chapter, folderName)
         .then(async (filesName) => {
-          this.logger.debug(`Generated media files for chapter ${chapter.number}: ${JSON.stringify(filesName)}`);
+          this.logger.debug(
+            `Generated media files for chapter ${chapter.number}: ${JSON.stringify(filesName)}`,
+          );
 
           await this.prisma.chapters.update({
             where: { id: chapter.id },
@@ -146,20 +193,28 @@ export class StoriesService {
               audio_url: `${folderName}/${filesName.audioFileName}`,
             },
           });
-          this.logger.debug(`Updated chapter ${chapter.number} with media URLs`);
+          this.logger.debug(
+            `Updated chapter ${chapter.number} with media URLs`,
+          );
         })
-        .catch(error => {
-          this.logger.error(`Error generating media for chapter ${chapter.number}: ${error.message}`);
+        .catch((error) => {
+          this.logger.error(
+            `Error generating media for chapter ${chapter.number}: ${error.message}`,
+          );
           throw error;
         });
     }
 
-    this.logger.log(`Successfully completed media generation for story ID: ${storyId}`);
+    this.logger.log(
+      `Successfully completed media generation for story ID: ${storyId}`,
+    );
     return story;
   }
 
   async generateStoryBackgroundImage(story: Partial<StoryDto>) {
-    this.logger.log(`Starting background image generation for story ID: ${story.id}`);
+    this.logger.log(
+      `Starting background image generation for story ID: ${story.id}`,
+    );
     const folderName = this.getFolderName(story);
     const backgroundImageFilename = 'background-image.jpg';
 
@@ -167,7 +222,9 @@ export class StoriesService {
       story.types_id,
       story.image_prompt,
     );
-    this.logger.debug(`Generated background image prompt: ${backgroundImagePrompt}`);
+    this.logger.debug(
+      `Generated background image prompt: ${backgroundImagePrompt}`,
+    );
 
     this.logger.log('Generating background image...');
     await this.genApiService
@@ -179,12 +236,16 @@ export class StoriesService {
         });
         this.logger.debug('Updated story with background image URL');
       })
-      .catch(error => {
-        this.logger.error(`Error generating background image: ${error.message}`);
+      .catch((error) => {
+        this.logger.error(
+          `Error generating background image: ${error.message}`,
+        );
         throw error;
       });
 
-    this.logger.log(`Successfully completed background image generation for story ID: ${story.id}`);
+    this.logger.log(
+      `Successfully completed background image generation for story ID: ${story.id}`,
+    );
   }
 
   async findAll(): Promise<StoryDto[]> {
@@ -195,8 +256,10 @@ export class StoriesService {
         types: true,
       },
     });
-    this.logger.log(`Successfully fetched ${stories.length} stories from database`);
-    return stories;
+    this.logger.log(
+      `Successfully fetched ${stories.length} stories from database`,
+    );
+    return stories as StoryDto[];
   }
 
   findAllByType(typeId: TypeDto['id']): Promise<StoryDto[]> {
@@ -205,7 +268,6 @@ export class StoriesService {
       where: { types_id: typeId },
     }) as Promise<StoryDto[]>;
   }
-
 
   async createStory(types_id: TypeDto['id']): Promise<StoryDto> {
     this.logger.log(`Starting story creation process for type ID: ${types_id}`);
@@ -257,23 +319,14 @@ export class StoriesService {
       });
 
       this.logger.debug('Creating chapters...');
-      const chapters = [
-        {
-          number: 1,
-          title: storyInfo.chapterOneTitle,
-          summary: storyInfo.chapterOneSummary,
-        },
-        {
-          number: 2,
-          title: storyInfo.chapterTwoTitle,
-          summary: storyInfo.chapterTwoSummary,
-        },
-        {
-          number: 3,
-          title: storyInfo.chapterThreeTitle,
-          summary: storyInfo.chapterThreeSummary,
-        },
-      ];
+      const chapters = [];
+      for (let i = 1; i <= types.chapter_count; i++) {
+        chapters.push({
+          number: i,
+          title: storyInfo[`chapter${i}Title`],
+          summary: storyInfo[`chapter${i}Summary`],
+        });
+      }
 
       for (const chapter of chapters) {
         this.logger.debug(`Creating chapter ${chapter.number}...`);
@@ -285,7 +338,9 @@ export class StoriesService {
         });
       }
 
-      this.logger.log(`Successfully completed story creation process for story ID: ${story.id}`);
+      this.logger.log(
+        `Successfully completed story creation process for story ID: ${story.id}`,
+      );
       return this.findOne(story.id);
     } catch (error) {
       this.logger.error(`Error in createStory: ${error.message}`);
@@ -307,11 +362,14 @@ export class StoriesService {
       throw new NotFoundException(`Story with ID: ${id} not found`);
     }
     this.logger.log(`Successfully fetched story with ID: ${id} from database`);
-    return story;
+
+    return story as StoryDto;
   }
 
   async generateFullStoryMedia(id: number): Promise<StoryDto> {
-    this.logger.log(`Starting full story media generation for story ID: ${id}...`);
+    this.logger.log(
+      `Starting full story media generation for story ID: ${id}...`,
+    );
     const story = (await this.prisma.stories.findUnique({
       where: { id },
       include: {
@@ -320,12 +378,27 @@ export class StoriesService {
             number: 'asc',
           },
         },
-        types: true,
+        types: {
+          select: {
+            id: true,
+            name: true,
+            story_prompt: true,
+            chapter_prompt: true,
+            image_prompt: true,
+            sound_prompt: true,
+            chapter_count: true,
+            word_count: true,
+            youtube_channel_id: true,
+            youtube_playlist_id: true,
+          },
+        },
       },
-    })) as StoryWithRelations;
+    })) as StoryDto;
 
     if (!story) {
-      this.logger.error(`Story with ID: ${id} not found for full media generation`);
+      this.logger.error(
+        `Story with ID: ${id} not found for full media generation`,
+      );
       throw new NotFoundException(`Story with ID: ${id} not found`);
     }
 
@@ -350,7 +423,9 @@ export class StoriesService {
       },
     });
 
-    this.logger.log(`Successfully completed full story media generation for story ID: ${id}`);
+    this.logger.log(
+      `Successfully completed full story media generation for story ID: ${id}`,
+    );
     return this.findOne(id);
   }
 
@@ -365,8 +440,10 @@ export class StoriesService {
     });
   }
 
-  updateStory(storyId: number, data: any) {
-    this.logger.debug(`Updating story ${storyId} with data: ${JSON.stringify(data)}`);
+  updateStory(storyId: number, data: Prisma.storiesUpdateInput) {
+    this.logger.debug(
+      `Updating story ${storyId} with data: ${JSON.stringify(data)}`,
+    );
     return this.prisma.stories.update({
       where: { id: storyId },
       data,
@@ -401,7 +478,9 @@ export class StoriesService {
     await this.generateFullStoryMedia(story.id);
     this.logger.debug('Full story media generated successfully');
 
-    this.logger.log(`Successfully completed full story creation and generation process for story ID: ${story.id}`);
+    this.logger.log(
+      `Successfully completed full story creation and generation process for story ID: ${story.id}`,
+    );
     return this.findOne(story.id);
   }
 }

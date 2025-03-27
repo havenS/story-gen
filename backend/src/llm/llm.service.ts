@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { ChapterDto } from 'src/chapters/dto/chapter.dto';
 import { StoryDto } from 'src/stories/dto/story.dto';
-import * as fs from 'fs';
+import { LLMMessageType } from './types/llm-message.type';
 
 @Injectable()
 export class LLMService {
@@ -18,7 +18,7 @@ export class LLMService {
     method: string,
     json: boolean,
     temperature?: number,
-    messages?: any[],
+    messages?: LLMMessageType[],
     seed?: number,
   ) {
     try {
@@ -67,11 +67,14 @@ export class LLMService {
         'Error calling LLM:',
         error.response ? error.response.data : error.message,
       );
-      throw new Error('Failed to call LLM: ' + (error.response ? error.response.data : error.message));
+      throw new Error(
+        'Failed to call LLM: ' +
+          (error.response ? error.response.data : error.message),
+      );
     }
   }
 
-  async generateStoryInfo(model, prompt: string, history: StoryDto[]) {
+  async generateStoryInfo(model: string, prompt: string, history: StoryDto[]) {
     this.logger.log('Generating story info with model:', model);
     const firstItem = history.map(({ name }) => name).join(', ');
     const messages = [
@@ -79,7 +82,7 @@ export class LLMService {
         role: 'user',
         content: `${prompt} > "Whispers" is forbidden in the title. You are not allowed to reuse these existing stories' titles or topics: ${firstItem}. Return a JSON object with the following structure: { "title": "string", "synopsis": "string", "chapterOneTitle": "string", "chapterOneSummary": "string" }`,
       },
-    ];
+    ] as LLMMessageType[];
 
     const call = await this.callLLM(
       model,
@@ -97,7 +100,12 @@ export class LLMService {
 
     try {
       const storyInfo = JSON.parse(call.message.content);
-      if (!storyInfo.title || !storyInfo.synopsis || !storyInfo.chapterOneTitle || !storyInfo.chapterOneSummary) {
+      if (
+        !storyInfo.title ||
+        !storyInfo.synopsis ||
+        !storyInfo.chapterOneTitle ||
+        !storyInfo.chapterOneSummary
+      ) {
         this.logger.error('Invalid story info format:', storyInfo);
         throw new Error('Invalid story info format');
       }
@@ -114,7 +122,7 @@ export class LLMService {
         role: 'user',
         content: `give me a very short, synthetic prompt to use in a text-to-image model like stable diffusion to illustrate the story. Limit to 49 tokens. for a story titled "${title}" with the synopsis being "${synopsis}". Give the prompt, straight, with nothing else.`,
       },
-    ];
+    ] as LLMMessageType[];
     const call = await this.callLLM(model, 'chat', false, 1, messages);
 
     if (call.message.content.split(' ').length > 25) {
@@ -142,7 +150,7 @@ export class LLMService {
       prompt = prompt.replace(key, placeholders[key]);
     }
 
-    const messages = [{ role: 'user', content: prompt }];
+    const messages = [{ role: 'user', content: prompt }] as LLMMessageType[];
 
     const call = await this.callLLM(model, 'chat', false, 0, messages);
     const { content } = call.message;
@@ -154,7 +162,9 @@ export class LLMService {
   async getChapterBackgroundSound(model, prompt: string, chapter: ChapterDto) {
     const completedPrompt = prompt.replace('[content]', chapter.summary);
 
-    const messages = [{ role: 'user', content: completedPrompt }];
+    const messages = [
+      { role: 'user', content: completedPrompt },
+    ] as LLMMessageType[];
     const call = await this.callLLM(model, 'chat', true, 1, messages);
 
     return JSON.parse(call.message.content);
@@ -185,7 +195,7 @@ Here is the synopsis: "${synopsis}".
 2. The title is short and catchy
 
 Important: Give me only the emoji and the title, nothing else, and no " around.`;
-    const messages = [{ role: 'user', content: prompt }];
+    const messages = [{ role: 'user', content: prompt }] as LLMMessageType[];
     const call = await this.callLLM(model, 'chat', false, 0.8, messages);
     const { content } = call.message;
 
@@ -212,7 +222,7 @@ Each chapter of the story builds suspense. The description should be engaging, p
 2. Call to action for viewers to watch and discover the full story.
 
 Important: Give me only the description, nothing else, and no " around the description.`;
-    const messages = [{ role: 'user', content: prompt }];
+    const messages = [{ role: 'user', content: prompt }] as LLMMessageType[];
     const call = await this.callLLM(model, 'chat', false, 0.8, messages);
     const { content } = call.message;
 
@@ -235,7 +245,7 @@ The tags should relate to the topic of the storyline and should be optimized for
 The tag must enhance the visibility of the video in the suggested Youtube videos.
 
 Give me only the best tags separated by commas, nothing else.`;
-    const messages = [{ role: 'user', content: prompt }];
+    const messages = [{ role: 'user', content: prompt }] as LLMMessageType[];
     const call = await this.callLLM(model, 'chat', false, 0.8, messages);
 
     return call.message.content.split(',').map((tag) => tag.trim());
@@ -261,7 +271,7 @@ Important:
   •	Choose only three sentences.
   •	Do not include any additional content or formatting in the response.`;
 
-    const messages = [{ role: 'user', content: prompt }];
+    const messages = [{ role: 'user', content: prompt }] as LLMMessageType[];
     const call = await this.callLLM(model, 'chat', false, 0, messages);
 
     return call.message.content;

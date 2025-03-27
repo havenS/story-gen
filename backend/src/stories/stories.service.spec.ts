@@ -1,7 +1,11 @@
 import { INestApplication } from '@nestjs/common';
 import { StoriesService } from './stories.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { setupTestApp, cleanupDatabase, createTestType } from '../../test/utils/setup';
+import {
+  setupTestApp,
+  cleanupDatabase,
+  createTestType,
+} from '../../test/utils/setup';
 import { StoryDto } from './dto/story.dto';
 
 describe('StoriesService', () => {

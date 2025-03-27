@@ -73,6 +73,8 @@ Do not generate anything outside this format. Ensure that there are no additiona
 - **Do not include any explanations, comments, encouragements, or additional text**—just the selected sound loop name.
 - If any text besides the sound loop name is generated, the output will be considered invalid. 
 - Your response must be exactly one word and contain only the name of the sound loop withou any special character.`,
+            chapter_count: 3,
+            word_count: 1000,
             youtube_channel_id: 'UCefA_F2t7JzwP7XXB_UxDGg',
             youtube_playlist_id: 'PLJffnTQK11ITm79MdbkX96YTxOoEUwdCA',
          },
@@ -146,6 +148,8 @@ Do not generate anything outside this format. Ensure that there are no additiona
 - Your response must be exactly one word and contain only the name of the sound loop withou any special character.`,
             youtube_channel_id: '',
             youtube_playlist_id: '',
+            chapter_count: 3,
+            word_count: 1000,
          },
       ],
    });

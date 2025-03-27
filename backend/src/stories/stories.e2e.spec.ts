@@ -1,20 +1,21 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { setupTestApp, cleanupDatabase, createTestType } from '../../test/utils/setup';
+import {
+  setupTestApp,
+  cleanupDatabase,
+  createTestType,
+} from '../../test/utils/setup';
 import { PrismaService } from '../prisma/prisma.service';
-import { GenApiService } from '../gen_api/gen_api.service';
 import { LLMService } from '../llm/llm.service';
 
 describe('Story Generation (e2e)', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
-  let genApiService: GenApiService;
   let llmService: LLMService;
 
   beforeEach(async () => {
     app = await setupTestApp();
     prismaService = app.get<PrismaService>(PrismaService);
-    genApiService = app.get<GenApiService>(GenApiService);
     llmService = app.get<LLMService>(LLMService);
     await cleanupDatabase(prismaService);
   });
@@ -57,13 +58,14 @@ describe('Story Generation (e2e)', () => {
         },
       });
       const mockChapterContent = [
-        'Chapter 1 content '.repeat(200),  // ~400 words
-        'Chapter 2 content '.repeat(200),  // ~400 words
-        'Chapter 3 content '.repeat(200),  // ~400 words
+        'Chapter 1 content '.repeat(200), // ~400 words
+        'Chapter 2 content '.repeat(200), // ~400 words
+        'Chapter 3 content '.repeat(200), // ~400 words
       ];
 
-      jest.spyOn(llmService, 'generateChapterContent').mockResolvedValue(mockChapterContent);
-
+      jest
+        .spyOn(llmService, 'generateChapterContent')
+        .mockResolvedValue(mockChapterContent);
 
       const response = await request(app.getHttpServer())
         .put(`/stories/${story.id}/generate-content`)

@@ -44,7 +44,10 @@ describe('AudioGenerationService', () => {
       const outputFileName = `test-audio-${Date.now()}.mp3`;
       const outputFilePath = join(outputPath, outputFileName);
 
-      const result = await service.extractAudioFromVideo(testVideoPath, outputFilePath);
+      const result = await service.extractAudioFromVideo(
+        testVideoPath,
+        outputFilePath,
+      );
 
       expect(result).toBe(true);
       expect(extractAudio).toHaveBeenCalledWith({
@@ -55,12 +58,17 @@ describe('AudioGenerationService', () => {
 
     it('should handle extraction failure', async () => {
       // Mock the extractAudio function to simulate failure
-      (extractAudio as jest.Mock).mockRejectedValueOnce(new Error('Extraction failed'));
+      (extractAudio as jest.Mock).mockRejectedValueOnce(
+        new Error('Extraction failed'),
+      );
 
       const outputFileName = `test-audio-${Date.now()}.mp3`;
       const outputFilePath = join(outputPath, outputFileName);
 
-      const result = await service.extractAudioFromVideo(testVideoPath, outputFilePath);
+      const result = await service.extractAudioFromVideo(
+        testVideoPath,
+        outputFilePath,
+      );
 
       expect(result).toBe(false);
       expect(extractAudio).toHaveBeenCalledWith({
@@ -81,4 +89,4 @@ describe('AudioGenerationService', () => {
       }
     });
   });
-}); 
+});

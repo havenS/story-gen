@@ -1,6 +1,10 @@
 import { PublishingService } from './publishing.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { setupTestApp, cleanupDatabase, createTestType } from '../../test/utils/setup';
+import {
+  setupTestApp,
+  cleanupDatabase,
+  createTestType,
+} from '../../test/utils/setup';
 
 describe('PublishingService', () => {
   let service: PublishingService;
@@ -147,4 +151,4 @@ describe('PublishingService', () => {
       expect(result.patreon_published).toBe(false);
     });
   });
-}); 
+});

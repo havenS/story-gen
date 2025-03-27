@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { LLMService } from './llm/llm.service';
 import { GenApiService } from './gen_api/gen_api.service';
+import { AxiosResponse } from 'axios';
 
 @Controller()
 export class AppController {
@@ -17,12 +18,12 @@ export class AppController {
   }
 
   @Get('ping/llm')
-  pingLLM(): Promise<any> {
+  pingLLM(): Promise<AxiosResponse<string>> {
     return this.llmService.pingLLM();
   }
 
   @Get('ping/gen-api')
-  pingGenApi(): Promise<any> {
+  pingGenApi(): Promise<AxiosResponse<string>> {
     return this.genApiService.pingGenApi();
   }
 }

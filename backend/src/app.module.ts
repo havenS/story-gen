@@ -32,4 +32,4 @@ import { join } from 'path';
   controllers: [AppController],
   providers: [AppService, ConfigurationService],
 })
-export class AppModule { }
+export class AppModule {}
