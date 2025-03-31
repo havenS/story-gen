@@ -319,23 +319,21 @@ export class StoriesService {
       });
 
       this.logger.debug('Creating chapters...');
-      const chapters = [];
-      for (let i = 1; i <= types.chapter_count; i++) {
-        chapters.push({
-          number: i,
-          title: storyInfo[`chapter${i}Title`],
-          summary: storyInfo[`chapter${i}Summary`],
-        });
-      }
+      const chaptersPrefixes = ['chapterOne', 'chapterTwo', 'chapterThree'];
 
-      for (const chapter of chapters) {
-        this.logger.debug(`Creating chapter ${chapter.number}...`);
+      let chapterNumber = 1;
+      for (const chapterPrefix of chaptersPrefixes) {
+        this.logger.debug(`Creating chapter ${chapterNumber} ...`);
+        const chapterInfo = {
+          number: chapterNumber++,
+          title: storyInfo[`${chapterPrefix}Title`],
+          summary: storyInfo[`${chapterPrefix}Summary`],
+          stories_id: story.id,
+        }
         await this.prisma.chapters.create({
-          data: {
-            ...chapter,
-            stories_id: story.id,
-          },
+          data: chapterInfo,
         });
+        this.logger.debug(`Created chapter with info ${JSON.stringify(chapterInfo)}`);
       }
 
       this.logger.log(

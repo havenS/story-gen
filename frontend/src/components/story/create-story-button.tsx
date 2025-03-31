@@ -22,12 +22,16 @@ function CreateStoryButton({ type }: CreateStoryButtonProps) {
   const createStoryMutation = useMutation({
     mutationFn: () => api.createAndGenerateStory({ data: { types_id: type.id } }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [[`${type.id}-stories`]] });
-      alert("Story created and generated successfully!");
+      // Invalidate both type-specific and all stories queries
+      queryClient.invalidateQueries({ queryKey: [`${type.id}-stories`] });
     },
-    onError: (error) => {
-      alert("Failed to create and generate story. Please try again.");
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || "Failed to create and generate story. Please try again.";
+      alert(errorMessage);
       console.error("Error creating story:", error);
+      // Still invalidate queries to ensure UI is in sync
+      queryClient.invalidateQueries({ queryKey: [`${type.id}-stories`] });
+      queryClient.invalidateQueries({ queryKey: ["stories"] });
     },
   });
 
@@ -50,6 +54,7 @@ function CreateStoryButton({ type }: CreateStoryButtonProps) {
             <Button
               className="w-full"
               onClick={() => createStoryMutation.mutate()}
+              disabled={createStoryMutation.isPending}
             >
               Create & Generate
             </Button>

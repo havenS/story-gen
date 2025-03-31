@@ -69,50 +69,63 @@ export class LLMService {
       );
       throw new Error(
         'Failed to call LLM: ' +
-          (error.response ? error.response.data : error.message),
+        (error.response ? error.response.data : error.message),
       );
     }
   }
 
   async generateStoryInfo(model: string, prompt: string, history: StoryDto[]) {
-    this.logger.log('Generating story info with model:', model);
+    this.logger.log(`Generating story info with model: ${model}`);
     const firstItem = history.map(({ name }) => name).join(', ');
     const messages = [
       {
         role: 'user',
-        content: `${prompt} > "Whispers" is forbidden in the title. You are not allowed to reuse these existing stories' titles or topics: ${firstItem}. Return a JSON object with the following structure: { "title": "string", "synopsis": "string", "chapterOneTitle": "string", "chapterOneSummary": "string" }`,
+        content: `${prompt} > "Whispers" is forbidden in the title. The following stories' titles are strictly forbidden: ${firstItem}. Return a JSON object with the following structure: { "title": "string", "synopsis": "string", "chapterOneTitle": "string", "chapterOneSummary": "string" }`,
       },
     ] as LLMMessageType[];
 
-    const call = await this.callLLM(
-      model,
-      'chat',
-      true,
-      0.2,
-      messages,
-      history.length,
-    );
+    let attempts = 0;
+    const maxRetries = 5;
 
-    if (!call?.message?.content) {
-      this.logger.error('LLM response is empty');
-      throw new Error('Failed to generate story info');
-    }
+    while (attempts < maxRetries) {
+      try {
+        const call = await this.callLLM(
+          model,
+          'chat',
+          true,
+          0.2,
+          messages,
+          history.length,
+        );
 
-    try {
-      const storyInfo = JSON.parse(call.message.content);
-      if (
-        !storyInfo.title ||
-        !storyInfo.synopsis ||
-        !storyInfo.chapterOneTitle ||
-        !storyInfo.chapterOneSummary
-      ) {
-        this.logger.error('Invalid story info format:', storyInfo);
-        throw new Error('Invalid story info format');
+        if (!call?.message?.content) {
+          this.logger.error('LLM response is empty');
+          throw new Error('Failed to generate story info');
+        }
+
+        const storyInfo = JSON.parse(call.message.content);
+        if (
+          !storyInfo.title ||
+          !storyInfo.synopsis ||
+          !storyInfo.chapterOneTitle ||
+          !storyInfo.chapterOneSummary
+        ) {
+          this.logger.error('Invalid story info format:', storyInfo);
+          throw new Error('Invalid story info format');
+        }
+
+        return storyInfo;
+      } catch (error) {
+        attempts++;
+        this.logger.warn(
+          `Attempt ${attempts} to generate story info failed: ${error.message}`,
+        );
+
+        if (attempts >= maxRetries) {
+          this.logger.error('Max retries reached. Failed to generate story info');
+          throw new Error('Failed to generate story info after multiple attempts');
+        }
       }
-      return storyInfo;
-    } catch (error) {
-      this.logger.error('Error parsing story info:', error);
-      throw new Error('Failed to parse story info');
     }
   }
 
