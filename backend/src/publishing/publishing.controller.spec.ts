@@ -11,6 +11,7 @@ describe('PublishingController', () => {
   beforeAll(async () => {
     app = await setupTestApp();
     controller = app.get<PublishingController>(PublishingController);
+    prismaService = app.get<PrismaService>(PrismaService);
   });
 
   afterAll(async () => {

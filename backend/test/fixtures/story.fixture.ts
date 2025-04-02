@@ -6,6 +6,8 @@ export const testTypeData = {
   sound_prompt: 'Create test sound',
   youtube_channel_id: 'test_channel_id',
   youtube_playlist_id: 'test_playlist_id',
+  chapter_count: 3,
+  word_count: 1000,
 };
 
 export const expectedStoryResponse = {
