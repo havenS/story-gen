@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueries, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
-import { AxiosResponse } from 'axios';
 import { StoryDto, TypeDto } from '@/services/api-client';
 
 interface StoriesByPublishStatus {
@@ -9,39 +8,31 @@ interface StoriesByPublishStatus {
 }
 
 export const useStories = (isBackendHealthy: boolean) => {
-  const [types, setTypes] = useState<TypeDto[]>([]);
-  const [storiesByType, setStoriesByType] = useState<Record<number, StoryDto[]>>({});
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (isBackendHealthy) {
-      api.findAllTypes().then((response: AxiosResponse) => {
-        setTypes(response.data);
-      });
-    }
-  }, [isBackendHealthy]);
+  const { data: types = [] } = useQuery<TypeDto[]>({
+    queryKey: ['types'],
+    queryFn: async () => {
+      const response = await api.findAllTypes();
+      return Array.isArray(response.data) ? response.data : [response.data];
+    },
+    enabled: isBackendHealthy,
+  });
 
-  useEffect(() => {
-    const fetchStoriesForType = async (typeId: number) => {
-      try {
-        const response = await api.findAllStoriesByType(String(typeId));
-        setStoriesByType((prev) => ({
-          ...prev,
-          [typeId]: response.data as StoryDto[],
-        }));
-      } catch (error) {
-        console.error(`Error fetching stories for type ${typeId}:`, error);
-      }
-    };
-
-    types.forEach((type) => {
-      if (type.id) {
-        fetchStoriesForType(type.id);
-      }
-    });
-  }, [types]);
+  // Fetch stories for all types
+  useQueries({
+    queries: types.map((type) => ({
+      queryKey: [`${type.id}-stories`],
+      queryFn: async () => {
+        const response = await api.findAllStoriesByType(`${type.id}`);
+        return Array.isArray(response.data) ? response.data : [response.data];
+      },
+      enabled: isBackendHealthy && !!type.id,
+    })),
+  });
 
   const getStoriesForType = (typeId: number): StoriesByPublishStatus => {
-    const stories = storiesByType[typeId] || [];
+    const stories = queryClient.getQueryData<StoryDto[]>([`${typeId}-stories`]) || [];
     const sortedStories = [...stories].sort((a, b) => {
       return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
     });

@@ -7,6 +7,8 @@ import { TypesService } from '../types/types.service';
 import { GenApiService } from '../gen_api/gen_api.service';
 import { StoryWithRelations } from './types/story-with-relations';
 import { Prisma } from '@prisma/client';
+import { FileSystemService } from '../media/services/file-system.service';
+import { ConfigurationService } from '../config/configuration.service';
 
 @Injectable()
 export class StoriesService {
@@ -17,7 +19,9 @@ export class StoriesService {
     private readonly llmService: LLMService,
     private readonly typesService: TypesService,
     private readonly genApiService: GenApiService,
-  ) { }
+    private readonly fileSystemService: FileSystemService,
+    private readonly configService: ConfigurationService,
+  ) {}
 
   getFolderName(story: Partial<StoryDto>) {
     this.logger.debug(
@@ -144,7 +148,9 @@ export class StoriesService {
   }
 
   async generateChaptersMedia(storyId: number) {
-    this.logger.log(`Starting chapter media generation for story ID: ${storyId}`);
+    this.logger.log(
+      `Starting chapter media generation for story ID: ${storyId}`,
+    );
     const story = (await this.prisma.stories.findUnique({
       where: { id: storyId },
       include: {
@@ -297,17 +303,23 @@ export class StoriesService {
         throw new Error('Failed to generate story info');
       }
 
+      this.logger.log('Generating story name...');
+      const storyName = await this.llmService.generateStoryName(
+        process.env.OLLAMA_MARKETING_MODEL,
+        `Generate a short, catchy YouTube video title based on this story synopsis: ${storyInfo.synopsis}. The title should be engaging and clickbait-style.`,
+      );
+
       this.logger.debug('Generating image prompt...');
       const imagePrompt = await this.llmService.generateStoryImagePrompt(
         process.env.OLLAMA_STORY_INFO_MODEL,
-        storyInfo.title,
+        storyName,
         storyInfo.synopsis,
       );
 
       this.logger.log('Creating story in database...');
       const story = await this.prisma.stories.create({
         data: {
-          name: storyInfo.title,
+          name: storyName,
           synopsis: storyInfo.synopsis,
           image_prompt: imagePrompt,
           types: {
@@ -329,11 +341,13 @@ export class StoriesService {
           title: storyInfo[`${chapterPrefix}Title`],
           summary: storyInfo[`${chapterPrefix}Summary`],
           stories_id: story.id,
-        }
+        };
         await this.prisma.chapters.create({
           data: chapterInfo,
         });
-        this.logger.debug(`Created chapter with info ${JSON.stringify(chapterInfo)}`);
+        this.logger.debug(
+          `Created chapter with info ${JSON.stringify(chapterInfo)}`,
+        );
       }
 
       this.logger.log(
@@ -480,5 +494,134 @@ export class StoriesService {
       `Successfully completed full story creation and generation process for story ID: ${story.id}`,
     );
     return this.findOne(story.id);
+  }
+
+  async regenerateStoryName(storyId: number): Promise<StoryDto> {
+    this.logger.log(
+      `Starting story name regeneration for story ID: ${storyId}`,
+    );
+    const story = await this.prisma.stories.findUnique({
+      where: { id: storyId },
+      include: {
+        types: {
+          select: {
+            id: true,
+            name: true,
+            story_prompt: true,
+          },
+        },
+      },
+    });
+
+    if (!story) {
+      throw new NotFoundException(`Story with ID ${storyId} not found`);
+    }
+
+    // Generate a new name using the LLM service
+    const newName = await this.llmService.generateStoryName(
+      process.env.OLLAMA_MARKETING_MODEL,
+      `Generate a short, catchy YouTube video title based on this story synopsis: ${story.synopsis}. The title should be engaging and clickbait-style.`,
+    );
+
+    // Get the old folder name
+    const oldFolderName = this.getFolderName(
+      story as unknown as Partial<StoryDto>,
+    );
+
+    // Update the story with the new name
+    const updatedStory = await this.prisma.stories.update({
+      where: { id: storyId },
+      data: { name: newName },
+      include: {
+        types: true,
+        chapters: {
+          orderBy: {
+            number: 'asc',
+          },
+        },
+        publishings: true,
+      },
+    });
+
+    // Get the new folder name
+    const newFolderName = this.getFolderName(
+      updatedStory as unknown as Partial<StoryDto>,
+    );
+
+    // If the folder name changed, rename the directory and update all media URLs
+    if (oldFolderName !== newFolderName) {
+      this.logger.log(
+        `Renaming media directory from ${oldFolderName} to ${newFolderName}`,
+      );
+
+      // Build the old and new directory paths
+      const oldDirectoryPath = this.fileSystemService.buildPath(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        this.configService.getPublicDir(),
+        this.configService.getGenerationDir(),
+        oldFolderName,
+      );
+      const newDirectoryPath = this.fileSystemService.buildPath(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        this.configService.getPublicDir(),
+        this.configService.getGenerationDir(),
+        newFolderName,
+      );
+
+      // Rename the directory
+      await this.fileSystemService.renameDirectory(
+        oldDirectoryPath,
+        newDirectoryPath,
+      );
+
+      this.logger.log(
+        `Updating media URLs from ${oldFolderName} to ${newFolderName}`,
+      );
+
+      // Update background image URL
+      if (updatedStory.background_image) {
+        const newBackgroundImage = updatedStory.background_image.replace(
+          oldFolderName,
+          newFolderName,
+        );
+        await this.prisma.stories.update({
+          where: { id: storyId },
+          data: { background_image: newBackgroundImage },
+        });
+      }
+
+      // Update chapter media URLs
+      for (const chapter of updatedStory.chapters) {
+        if (chapter.audio_url) {
+          const newAudioUrl = chapter.audio_url.replace(
+            oldFolderName,
+            newFolderName,
+          );
+          await this.prisma.chapters.update({
+            where: { id: chapter.id },
+            data: { audio_url: newAudioUrl },
+          });
+        }
+        if (chapter.video_url) {
+          const newVideoUrl = chapter.video_url.replace(
+            oldFolderName,
+            newFolderName,
+          );
+          await this.prisma.chapters.update({
+            where: { id: chapter.id },
+            data: { video_url: newVideoUrl },
+          });
+        }
+      }
+    }
+
+    this.logger.log(`Successfully regenerated name for story ID: ${storyId}`);
+    return updatedStory as StoryDto;
   }
 }

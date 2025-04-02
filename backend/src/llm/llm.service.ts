@@ -69,7 +69,7 @@ export class LLMService {
       );
       throw new Error(
         'Failed to call LLM: ' +
-        (error.response ? error.response.data : error.message),
+          (error.response ? error.response.data : error.message),
       );
     }
   }
@@ -80,7 +80,7 @@ export class LLMService {
     const messages = [
       {
         role: 'user',
-        content: `${prompt} > "Whispers" is forbidden in the title. The following stories' titles are strictly forbidden: ${firstItem}. Return a JSON object with the following structure: { "title": "string", "synopsis": "string", "chapterOneTitle": "string", "chapterOneSummary": "string" }`,
+        content: `${prompt} > "Whispers" is forbidden in the title. The following stories' titles are strictly forbidden: ${firstItem}. Return a JSON object with the following structure: { "synopsis": "string", "chapterOneTitle": "string", "chapterOneSummary": "string" }`,
       },
     ] as LLMMessageType[];
 
@@ -105,7 +105,6 @@ export class LLMService {
 
         const storyInfo = JSON.parse(call.message.content);
         if (
-          !storyInfo.title ||
           !storyInfo.synopsis ||
           !storyInfo.chapterOneTitle ||
           !storyInfo.chapterOneSummary
@@ -122,8 +121,12 @@ export class LLMService {
         );
 
         if (attempts >= maxRetries) {
-          this.logger.error('Max retries reached. Failed to generate story info');
-          throw new Error('Failed to generate story info after multiple attempts');
+          this.logger.error(
+            'Max retries reached. Failed to generate story info',
+          );
+          throw new Error(
+            'Failed to generate story info after multiple attempts',
+          );
         }
       }
     }
@@ -288,5 +291,49 @@ Important:
     const call = await this.callLLM(model, 'chat', false, 0, messages);
 
     return call.message.content;
+  }
+
+  async generateStoryName(model: string, prompt: string): Promise<string> {
+    this.logger.log(`Generating story name with model: ${model}`);
+    const messages = [
+      {
+        role: 'user',
+        content: `${prompt} Avoid common patterns like "You won't believe...", "The truth about...", or "What they don't want you to know...". Create a unique, engaging title that stands out. Return only the title, nothing else, and no quotes around it.`,
+      },
+    ] as LLMMessageType[];
+
+    let attempts = 0;
+    const maxRetries = 5;
+
+    while (attempts < maxRetries) {
+      try {
+        const call = await this.callLLM(model, 'chat', false, 0.8, messages);
+
+        if (!call?.message?.content) {
+          this.logger.error('LLM response is empty');
+          throw new Error('Failed to generate story name');
+        }
+
+        const storyName = call.message.content.trim();
+        if (storyName.startsWith('"') && storyName.endsWith('"')) {
+          return storyName.slice(1, -1);
+        }
+        return storyName;
+      } catch (error) {
+        attempts++;
+        this.logger.warn(
+          `Attempt ${attempts} to generate story name failed: ${error.message}`,
+        );
+
+        if (attempts >= maxRetries) {
+          this.logger.error(
+            'Max retries reached. Failed to generate story name',
+          );
+          throw new Error(
+            'Failed to generate story name after multiple attempts',
+          );
+        }
+      }
+    }
   }
 }

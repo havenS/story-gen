@@ -10,7 +10,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { AxiosResponse } from "axios";
 
 interface TypeBlockProps {
   type: TypeDto;
@@ -18,18 +17,14 @@ interface TypeBlockProps {
 
 const TypeBlock: React.FC<TypeBlockProps> = ({ type }) => {
   // Queries
-  const query = useQuery({
+  const { data: stories = [], isLoading } = useQuery<StoryDto[]>({
     queryKey: [`${type.id}-stories`],
-    queryFn: () => {
-      return api
-        .findAllStoriesByType(`${type.id}`)
-        .then((response: AxiosResponse) =>
-          response.data.sort((a: StoryDto, b: StoryDto) => b.id! - a.id!)
-        );
-    },
+    queryFn: () => api.findAllStoriesByType(`${type.id}`).then((response) => 
+      (response.data as StoryDto[]).sort((a, b) => b.id! - a.id!)
+    ),
   });
 
-  if (query.isLoading) {
+  if (isLoading) {
     return <Spinner size={70} />;
   }
 
@@ -50,11 +45,11 @@ const TypeBlock: React.FC<TypeBlockProps> = ({ type }) => {
               key={type.id}
               className="flex flex-wrap space-y-4 justify-evenly"
             >
-              {[...query.data]
-                ?.filter(
-                  (story: StoryDto) => (story.publishings ?? []).length === 0
+              {stories
+                .filter(
+                  (story) => (story.publishings ?? []).length === 0
                 )
-                .map((story: StoryDto) => (
+                .map((story) => (
                   <StoryCard key={story.id} story={story} />
                 ))}
             </div>
@@ -67,11 +62,11 @@ const TypeBlock: React.FC<TypeBlockProps> = ({ type }) => {
               key={type.id}
               className="flex flex-wrap space-y-4 justify-evenly"
             >
-              {[...query.data]
-                ?.filter((story: StoryDto) => {
+              {stories
+                .filter((story) => {
                   return (story.publishings?.length ?? 0) > 0;
                 })
-                .map((story: StoryDto) => (
+                .map((story) => (
                   <StoryCard key={story.id} story={story} />
                 ))}
             </div>

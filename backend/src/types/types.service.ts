@@ -27,6 +27,7 @@ export class TypesService {
     return this.prisma.stories.findMany({
       where: { types_id: id },
       include: { chapters: true, publishings: true },
+      orderBy: { id: 'desc' },
     });
   }
 

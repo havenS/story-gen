@@ -9,7 +9,7 @@ import { Logger } from '@nestjs/common';
 export class StoriesController {
   private readonly logger = new Logger(StoriesController.name);
 
-  constructor(private readonly storiesService: StoriesService) { }
+  constructor(private readonly storiesService: StoriesService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new story' })
@@ -137,5 +137,21 @@ export class StoriesController {
       `Successfully completed create-and-generate process for story ID: ${story.id}`,
     );
     return this.storiesService.findOne(story.id);
+  }
+
+  @Post(':id/regenerate-name')
+  @ApiOperation({ summary: 'Regenerate the story name based on its synopsis' })
+  @ApiResponse({
+    status: 200,
+    description: 'The story name has been successfully regenerated.',
+    type: StoryDto,
+  })
+  async regenerateStoryName(@Param('id') id: string): Promise<StoryDto> {
+    this.logger.log(`Regenerating name for story with ID: ${id}...`);
+    const story = await this.storiesService.regenerateStoryName(
+      parseInt(id, 10),
+    );
+    this.logger.log(`Successfully regenerated name for story with ID: ${id}`);
+    return story;
   }
 }

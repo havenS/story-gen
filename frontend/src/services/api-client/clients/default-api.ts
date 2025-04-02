@@ -550,6 +550,40 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @summary Regenerate the story name based on its synopsis
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        regenerateStoryName: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('regenerateStoryName', 'id', id)
+            const localVarPath = `/stories/{id}/regenerate-name`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {string} code 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -818,6 +852,19 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Regenerate the story name based on its synopsis
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async regenerateStoryName(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoryDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.regenerateStoryName(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.regenerateStoryName']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {string} code 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -993,6 +1040,16 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         publishYoutube(storyId: string, options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.publishYoutube(storyId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Regenerate the story name based on its synopsis
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        regenerateStoryName(id: string, options?: RawAxiosRequestConfig): AxiosPromise<StoryDto> {
+            return localVarFp.regenerateStoryName(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1196,6 +1253,18 @@ export class DefaultApi extends BaseAPI {
      */
     public publishYoutube(storyId: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).publishYoutube(storyId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Regenerate the story name based on its synopsis
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public regenerateStoryName(id: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).regenerateStoryName(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
