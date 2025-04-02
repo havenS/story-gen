@@ -108,7 +108,6 @@ python -m pytest -m "not integration"
 
 Create a `.env` file based on `.env.example`:
 ```env
-OPENAI_API_KEY=your_openai_api_key
 OLLAMA_API_URL=your_ollama_api_url
 YOUTUBE_API_KEY=your_youtube_api_key
 ```

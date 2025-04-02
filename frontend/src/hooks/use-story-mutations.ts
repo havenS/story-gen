@@ -8,6 +8,9 @@ export function useStoryMutations(storyId: number, typesId: number) {
     queryClient.invalidateQueries({
       queryKey: [`${typesId}-stories`],
     });
+    queryClient.invalidateQueries({
+      queryKey: ['types'],
+    });
   };
 
   const generateImageMutation = useMutation({
@@ -48,11 +51,18 @@ export function useStoryMutations(storyId: number, typesId: number) {
     onError: invalidateQueries,
   });
 
+  const regenerateStoryNameMutation = useMutation({
+    mutationFn: () => api.regenerateStoryName(String(storyId)),
+    onSuccess: invalidateQueries,
+    onError: invalidateQueries,
+  });
+
   return {
     generateImageMutation,
     generateChaptersContentMutation,
     generateChaptersMediaMutation,
     generateStoryMediaMutation,
     publishToYoutubeMutation,
+    regenerateStoryNameMutation,
   };
 } 

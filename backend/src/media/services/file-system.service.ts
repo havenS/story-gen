@@ -23,4 +23,18 @@ export class FileSystemService {
   buildPath(...paths: string[]): string {
     return join(...paths);
   }
+
+  async renameDirectory(oldPath: string, newPath: string): Promise<void> {
+    try {
+      await fs.rename(oldPath, newPath);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        throw new Error(`Source directory ${oldPath} does not exist`);
+      }
+      if (error.code === 'EEXIST') {
+        throw new Error(`Destination directory ${newPath} already exists`);
+      }
+      throw error;
+    }
+  }
 }

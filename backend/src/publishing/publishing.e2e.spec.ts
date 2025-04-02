@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import * as fs from 'fs';
-import { youtube_v3 } from 'googleapis';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { YoutubeService } from 'src/youtube/youtube.service';
 import {
@@ -71,11 +70,18 @@ describe('Publishing Flow (e2e)', () => {
         thumbnail: 'test/path',
       });
 
-      const mockVideo: youtube_v3.Schema$Video = {
+      const mockVideo = {
         id: 'test-video-id',
         snippet: {
           title: 'Test Title',
           description: 'Test Description',
+          thumbnails: {
+            default: {
+              url: 'test/path',
+              width: 120,
+              height: 90,
+            },
+          },
         },
       };
       jest.spyOn(youtubeService, 'uploadVideo').mockResolvedValue(mockVideo);
@@ -179,11 +185,18 @@ describe('Publishing Flow (e2e)', () => {
           thumbnail: 'test/path',
         });
 
-        const mockVideo: youtube_v3.Schema$Video = {
+        const mockVideo = {
           id: 'test-video-id',
           snippet: {
             title: 'Test Title',
             description: 'Test Description',
+            thumbnails: {
+              default: {
+                url: 'test/path',
+                width: 120,
+                height: 90,
+              },
+            },
           },
         };
         jest.spyOn(youtubeService, 'uploadVideo').mockResolvedValue(mockVideo);

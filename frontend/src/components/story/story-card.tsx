@@ -10,20 +10,42 @@ import { cn } from "@/lib/utils";
 import { useStoryMutations } from "@/hooks/use-story-mutations";
 import { CardImage } from "@/components/common/card-image";
 import { Step } from "@/components/common/step";
-
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface StoryCardProps {
   story: StoryDto;
 }
 
 function CreateStoryCard({ story }: StoryCardProps) {
+  const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
+  const queryClient = useQueryClient();
   const {
     generateImageMutation,
     generateChaptersContentMutation,
     generateChaptersMediaMutation,
     generateStoryMediaMutation,
     publishToYoutubeMutation,
+    regenerateStoryNameMutation,
   } = useStoryMutations(story.id!, story.types_id);
+
+  const handleRegenerateName = async () => {
+    await regenerateStoryNameMutation.mutateAsync();
+    setShowRegenerateDialog(false);
+    await queryClient.invalidateQueries({ queryKey: ['stories'] });
+  };
 
   return (
     <Card className={cn(
@@ -37,7 +59,21 @@ function CreateStoryCard({ story }: StoryCardProps) {
           videoUrl={story.video_url}
         />
         <div className="space-y-2">
-          <CardTitle className="text-2xl">{story.name}</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-2xl">{story.name}</CardTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowRegenerateDialog(true)}
+              className="h-8 w-8"
+              disabled={regenerateStoryNameMutation.isPending}
+            >
+              <RefreshCw className={cn(
+                "h-4 w-4",
+                regenerateStoryNameMutation.isPending && "animate-spin"
+              )} />
+            </Button>
+          </div>
           <CardDescription className="text-base leading-relaxed">
             {story.synopsis}
           </CardDescription>
@@ -90,6 +126,26 @@ function CreateStoryCard({ story }: StoryCardProps) {
           isPending={publishToYoutubeMutation.isPending}
         />
       </CardContent>
+
+      <AlertDialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Regenerate Story Name</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to regenerate the story name? This will update the folder name and all associated media URLs.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRegenerateName}
+              disabled={regenerateStoryNameMutation.isPending}
+            >
+              {regenerateStoryNameMutation.isPending ? "Regenerating..." : "Regenerate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

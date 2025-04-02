@@ -98,6 +98,10 @@ export class MockLLMService implements Partial<LLMService> {
     };
   }
 
+  async generateStoryName(): Promise<string> {
+    return 'Test Story Name';
+  }
+
   async generateChapterExceptForShort(): Promise<string> {
     return 'Test chapter excerpt';
   }
